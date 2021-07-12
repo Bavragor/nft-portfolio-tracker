@@ -3,7 +3,7 @@
 namespace NftPortfolioTracker\Handler\Contract;
 
 use NftPortfolioTracker\Event\Account\AccountAssetsChanged;
-use NftPortfolioTracker\Event\Account\AccountBalanceChanged;
+use NftPortfolioTracker\Event\Account\AccountBalanceChangedEvent;
 use NftPortfolioTracker\Event\Account\AccountUpdatedEvent;
 use NftPortfolioTracker\Event\Contract\ContractAddedEvent;
 use NftPortfolioTracker\Event\Transaction\TransactionInEvent;

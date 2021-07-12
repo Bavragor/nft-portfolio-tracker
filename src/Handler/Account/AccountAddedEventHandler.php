@@ -3,9 +3,10 @@
 namespace NftPortfolioTracker\Handler\Account;
 
 use NftPortfolioTracker\Etherscan\Client;
+use NftPortfolioTracker\Etherscan\Exception\EtherscanApiRequestFailed;
 use NftPortfolioTracker\Event\Account\AccountAddedEvent;
 use NftPortfolioTracker\Event\Account\AccountAssetsChanged;
-use NftPortfolioTracker\Event\Account\AccountBalanceChanged;
+use NftPortfolioTracker\Event\Account\AccountBalanceChangedEvent;
 use NftPortfolioTracker\Event\Transaction\TransactionInEvent;
 use NftPortfolioTracker\Event\Transaction\TransactionOutEvent;
 use NftPortfolioTracker\Repository\AccountTransactionRepository;
@@ -42,19 +43,19 @@ class AccountAddedEventHandler implements EventSubscriberInterface
 
     public function handle(AccountAddedEvent $event): void
     {
-        $contracts = $this->projectRepository->getDistinctContracts();
+        $projects = $this->projectRepository->findAll();
         $latestBlockNumber = $this->transactionRepository->getLatestBlockNumberForAccount($event->getAddress());
 
-        if (count($contracts) === 0) {
+        if (count($projects) === 0) {
             return;
         }
 
         $transactionCount = 0;
-        $transactions = $this->etherscanClient->getErc721Transactions($event->getAddress(), $contracts, $latestBlockNumber);
+        $transactions = $this->etherscanClient->getErc721Transactions($event->getAddress(), $projects, $latestBlockNumber);
 
         foreach ($transactions as $transaction) {
             if (!isset($transaction['hash'])) {
-                $this->logger->warning('Empty transaction', [$event->getAddress(), $contracts, $latestBlockNumber]);
+                $this->logger->warning('Empty transaction', [$event->getAddress(), $latestBlockNumber]);
                 continue;
             }
 
@@ -64,7 +65,12 @@ class AccountAddedEventHandler implements EventSubscriberInterface
             $transactionIncoming = $transaction['to'] === $event->getAddress();
             $transactionOutgoing = $transaction['from'] === $event->getAddress();
 
-            $transaction['value'] = $this->etherscanClient->getValueForTransaction($event->getAddress(), $transaction['hash'], $transaction['blockNumber'], $transactionOutgoing);
+            try {
+                $transaction['value'] = $this->etherscanClient->getValueForTransaction($transaction['apiUrl'], $event->getAddress(), $transaction['hash'], $transaction['blockNumber'], $transactionOutgoing);
+            } catch (EtherscanApiRequestFailed $etherscanApiRequestFailed) {
+                $this->logger->warning('No value for transaction found', $transaction);
+                $transaction['value'] = 0;
+            }
 
             if ($transactionOutgoing) {
                 $transactionAddedEvent = TransactionOutEvent::createFromArrayWithAccount(
@@ -92,7 +98,7 @@ class AccountAddedEventHandler implements EventSubscriberInterface
 
         if ($transactionCount !== 0) {
             $this->asyncEventDispatcher->dispatch(AccountAssetsChanged::create($event->getAddress()));
-            $this->asyncEventDispatcher->dispatch(AccountBalanceChanged::create($event->getAddress()));
+            $this->asyncEventDispatcher->dispatch(AccountBalanceChangedEvent::create($event->getAddress()));
         }
     }
 }

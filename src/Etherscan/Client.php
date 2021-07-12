@@ -5,6 +5,7 @@ namespace NftPortfolioTracker\Etherscan;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Client as HttpClient;
 use JsonException;
+use NftPortfolioTracker\Entity\Project;
 use NftPortfolioTracker\Etherscan\Exception\EtherscanApiRequestFailed;
 use Psr\Log\LoggerInterface;
 use Spatie\GuzzleRateLimiterMiddleware\RateLimiterMiddleware;
@@ -17,12 +18,11 @@ class Client
 {
     private LoggerInterface $logger;
     private HttpClient $httpClient;
-    private string $baseUrl;
     private string $apiToken;
 
     private static array $transactionHashes = [];
 
-    public function __construct(LoggerInterface $logger, string $baseUrl, string $apiToken)
+    public function __construct(LoggerInterface $logger, string $apiToken)
     {
         $stack = HandlerStack::create();
         $stack->push(RateLimiterMiddleware::perSecond(3));
@@ -32,20 +32,19 @@ class Client
         ]);
 
         $this->logger = $logger;
-        $this->baseUrl = $baseUrl;
         $this->apiToken = $apiToken;
     }
 
     /**
      * @param string $account
-     * @param string[] $contracts
+     * @param Project[] $projects
      * @param int|null $latestBlockNumber
      *
      * @return array
      *
      * @throws EtherscanApiRequestFailed
      */
-    public function getErc721Transactions(string $account, array $contracts, ?int $latestBlockNumber): iterable
+    public function getErc721Transactions(string $account, array $projects, ?int $latestBlockNumber): iterable
     {
         $queryParameters = [
             'module' => 'account',
@@ -59,10 +58,11 @@ class Client
             $queryParameters['startblock'] = $latestBlockNumber;
         }
 
-        foreach ($contracts as $contract) {
-            $queryParameters['contractaddress'] = $contract['contract'];
+        foreach ($projects as $project) {
+            $baseUrl = $project->getEtherscanUrl();
+            $queryParameters['contractaddress'] = $project->getContract();
 
-            $response = $this->httpClient->request(Request::METHOD_GET, $this->baseUrl, ['query' => $queryParameters]);
+            $response = $this->httpClient->request(Request::METHOD_GET, $baseUrl, ['query' => $queryParameters]);
 
             try {
                 $responseData = json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR);
@@ -70,6 +70,7 @@ class Client
                 $this->validateApiResponse($responseData);
 
                 foreach ($responseData['result'] as $transaction) {
+                    $transaction['apiUrl'] = $baseUrl;
                     yield $transaction;
                 }
             } catch (EtherscanApiRequestFailed $etherscanApiRequestFailed) {
@@ -102,7 +103,7 @@ class Client
     /**
      * @throws EtherscanApiRequestFailed
      */
-    public function getValueForTransaction(string $account, string $transactionHash, int $transactionBlockNumber, bool $isInternal): int
+    public function getValueForTransaction(string $baseUrl, string $account, string $transactionHash, int $transactionBlockNumber, bool $isInternal): int
     {
         if (isset(self::$transactionHashes[$transactionHash])) {
             return self::$transactionHashes[$transactionHash];
@@ -120,7 +121,7 @@ class Client
         $queryParameters['endblock'] = $transactionBlockNumber;
 
         $this->logger->info('Requesting...' , $queryParameters);
-        $response = $this->httpClient->request(Request::METHOD_GET, $this->baseUrl, ['query' => $queryParameters]);
+        $response = $this->httpClient->request(Request::METHOD_GET, $baseUrl, ['query' => $queryParameters]);
 
         try {
             $responseData = json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR);
@@ -137,8 +138,9 @@ class Client
         } catch (EtherscanApiRequestFailed $etherscanApiRequestFailed) {
             // No result, try using erc20 transfers to get value, because of weth
             $queryParameters['action'] = 'tokentx';
+            $queryParameters['sort'] = 'asc';
             $this->logger->info('Requesting...' , $queryParameters);
-            $response = $this->httpClient->request(Request::METHOD_GET, $this->baseUrl, ['query' => $queryParameters]);
+            $response = $this->httpClient->request(Request::METHOD_GET, $baseUrl, ['query' => $queryParameters]);
             $responseData = json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR);
 
             $this->validateApiResponse($responseData);
@@ -147,7 +149,7 @@ class Client
                 if ($transaction['hash'] === $transactionHash) {
                     self::$transactionHashes[$transactionHash] = $transaction['value'];
 
-                    return $transaction['value'];
+                    return (int) $transaction['value'];
                 }
             }
 

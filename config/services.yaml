@@ -23,7 +23,6 @@ services:
 
     NftPortfolioTracker\Etherscan\Client:
         arguments:
-            $baseUrl: '%env(resolve:ETHERSCAN_API)%'
             $apiToken: '%env(resolve:ETHERSCAN_API_KEY)%'
 
     # add more service definitions when explicit configuration is needed

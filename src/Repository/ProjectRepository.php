@@ -26,13 +26,25 @@ class ProjectRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return string[]
+     * @return array[]
      */
     public function getDistinctContracts(): array
     {
         return $this->createQueryBuilder('project')
             ->select('project.contract')
             ->groupBy('project.contract')
+            ->getQuery()
+            ->getScalarResult();
+    }
+
+    /**
+     * @return array[]
+     */
+    public function getDistinctTokenSymbols(): array
+    {
+        return $this->createQueryBuilder('project')
+            ->select('project.tokenSymbol')
+            ->groupBy('project.tokenSymbol')
             ->getQuery()
             ->getScalarResult();
     }

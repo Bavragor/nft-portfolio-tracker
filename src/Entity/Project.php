@@ -47,6 +47,11 @@ class Project
      */
     private string $contract;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $etherscanUrl;
+
     public function __construct()
     {
         $this->id = Uuid::v4();
@@ -125,6 +130,18 @@ class Project
     public function setContract(string $contract): self
     {
         $this->contract = $contract;
+
+        return $this;
+    }
+
+    public function getEtherscanUrl(): ?string
+    {
+        return $this->etherscanUrl;
+    }
+
+    public function setEtherscanUrl(string $etherscanUrl): self
+    {
+        $this->etherscanUrl = $etherscanUrl;
 
         return $this;
     }

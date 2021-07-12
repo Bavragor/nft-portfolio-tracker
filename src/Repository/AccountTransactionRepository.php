@@ -47,4 +47,27 @@ class AccountTransactionRepository extends ServiceEntityRepository
             return null;
         }
     }
+
+    /**
+     * @return AccountTransaction[]
+     */
+    public function getTransactionsByAccountAndTokenSymbols(string $account, string $tokenSymbol): array
+    {
+        $queryBuilder = $this->createQueryBuilder('transaction');
+        $queryBuilder = $queryBuilder
+            ->select('transaction')
+            ->where(
+                $queryBuilder->expr()->andX(
+                    $queryBuilder->expr()->eq('transaction.tokenSymbol', $queryBuilder->expr()->literal($tokenSymbol)),
+                    $queryBuilder->expr()->orX(
+                        $queryBuilder->expr()->eq('transaction.toAddress', $queryBuilder->expr()->literal($account)),
+                        $queryBuilder->expr()->eq('transaction.fromAddress', $queryBuilder->expr()->literal($account))
+                    )
+                )
+            )
+            ->groupBy('transaction.transactionHash')
+        ;
+
+        return $queryBuilder->getQuery()->getResult();
+    }
 }
