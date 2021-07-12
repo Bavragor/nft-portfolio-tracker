@@ -4,7 +4,7 @@ namespace NftPortfolioTracker\Handler\Account;
 
 use NftPortfolioTracker\Etherscan\Client;
 use NftPortfolioTracker\Event\Account\AccountAddedEvent;
-use NftPortfolioTracker\Event\Account\AccountAssetsChanged;
+use NftPortfolioTracker\Event\Account\AccountAssetsChangedEvent;
 use NftPortfolioTracker\Event\Account\AccountBalanceChangedEvent;
 use NftPortfolioTracker\Event\Account\AccountUpdatedEvent;
 use NftPortfolioTracker\Event\Transaction\TransactionInEvent;
@@ -96,7 +96,7 @@ class AccountUpdatedEventHandler implements EventSubscriberInterface
         }
 
         if ($transactionsCount !== 0) {
-            $this->asyncEventDispatcher->dispatch(AccountAssetsChanged::create($event->getAddress()));
+            $this->asyncEventDispatcher->dispatch(AccountAssetsChangedEvent::create($event->getAddress()));
             $this->asyncEventDispatcher->dispatch(AccountBalanceChangedEvent::create($event->getAddress()));
         }
     }

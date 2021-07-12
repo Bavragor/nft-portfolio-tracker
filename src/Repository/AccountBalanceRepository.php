@@ -19,11 +19,12 @@ class AccountBalanceRepository extends ServiceEntityRepository
         parent::__construct($registry, AccountBalance::class);
     }
 
-    public function truncateTable(): void
+    public function truncateTable(string $address): void
     {
         $connection = $this->getEntityManager()->getConnection();
-        $platform = $connection->getDatabasePlatform();
-        $connection->executeStatement($platform->getTruncateTableSQL($this->getEntityManager()->getClassMetadata(AccountBalance::class)->getTableName(), false));
+        $tableName = $this->getEntityManager()->getClassMetadata(AccountBalance::class)->getTableName();
+
+        $connection->delete($tableName, ['account' => $address]);
     }
 
     public function save(AccountBalance $accountBalance): void

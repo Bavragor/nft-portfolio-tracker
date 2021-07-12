@@ -70,4 +70,23 @@ class AccountTransactionRepository extends ServiceEntityRepository
 
         return $queryBuilder->getQuery()->getResult();
     }
+
+    /**
+     * @return AccountTransaction[]
+     */
+    public function getTransactionsByAccount(string $account): array
+    {
+        $queryBuilder = $this->createQueryBuilder('transaction');
+        $queryBuilder = $queryBuilder
+            ->select('transaction')
+            ->where(
+                $queryBuilder->expr()->orX(
+                    $queryBuilder->expr()->eq('transaction.toAddress', $queryBuilder->expr()->literal($account)),
+                    $queryBuilder->expr()->eq('transaction.fromAddress', $queryBuilder->expr()->literal($account))
+                )
+            )
+        ;
+
+        return $queryBuilder->getQuery()->getResult();
+    }
 }

@@ -48,15 +48,6 @@ class AccountBalance
      */
     private string $account;
 
-    /**
-     * AccountBalance constructor.
-     * @param float $balance
-     * @param int $balanceInWei
-     * @param string|null $tokenSymbol
-     * @param int $usedGasInWei
-     * @param float $usedGas
-     * @param string $account
-     */
     public function __construct(string $account, float $balance, int $balanceInWei, float $usedGas, int $usedGasInWei, ?string $tokenSymbol)
     {
         $this->id = Uuid::v4();

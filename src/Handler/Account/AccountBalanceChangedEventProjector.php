@@ -32,7 +32,7 @@ class AccountBalanceChangedEventProjector implements EventSubscriberInterface
 
     public function handle(AccountBalanceChangedEvent $event): void
     {
-        $this->accountBalanceRepository->truncateTable();
+        $this->accountBalanceRepository->truncateTable($event->getAddress());
 
         $projects = $this->projectRepository->getDistinctTokenSymbols();
 
