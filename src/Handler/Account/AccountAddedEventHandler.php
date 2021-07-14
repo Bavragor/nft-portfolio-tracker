@@ -2,6 +2,7 @@
 
 namespace NftPortfolioTracker\Handler\Account;
 
+use NftPortfolioTracker\Enum\TransactionDirectionEnum;
 use NftPortfolioTracker\Etherscan\Client;
 use NftPortfolioTracker\Etherscan\Exception\EtherscanApiRequestFailed;
 use NftPortfolioTracker\Event\Account\AccountAddedEvent;
@@ -44,13 +45,14 @@ class AccountAddedEventHandler implements EventSubscriberInterface
     public function handle(AccountAddedEvent $event): void
     {
         $projects = $this->projectRepository->findAll();
-        $latestBlockNumber = $this->transactionRepository->getLatestBlockNumberForAccount($event->getAddress());
 
         if (count($projects) === 0) {
             return;
         }
 
-        $transactionCount = 0;
+        $latestBlockNumber = $this->transactionRepository->getLatestBlockNumberForAccount($event->getAddress());
+
+        $transactionHashes = [];
         $transactions = $this->etherscanClient->getErc721Transactions($event->getAddress(), $projects, $latestBlockNumber);
 
         foreach ($transactions as $transaction) {
@@ -93,10 +95,38 @@ class AccountAddedEventHandler implements EventSubscriberInterface
             }
 
             $this->eventDispatcher->dispatch($transactionAddedEvent);
-            $transactionCount++;
+            $transactionHashes[] = $transaction['hash'];
         }
 
-        if ($transactionCount !== 0) {
+        foreach ([TransactionDirectionEnum::OUT, TransactionDirectionEnum::IN] as $direction) {
+            $openSeaTransactions = $this->etherscanClient->getTransactionsForOpenSea($event->getAddress(), $latestBlockNumber, $direction);
+
+            foreach ($openSeaTransactions as $openSeaTransaction) {
+                if (in_array($openSeaTransaction['hash'], $transactionHashes, true)) {
+                    continue;
+                }
+
+                if ($direction === TransactionDirectionEnum::OUT) {
+                    $transactionAddedEvent = TransactionOutEvent::createFromArrayWithAccount(
+                        $event->getAddress(),
+                        $openSeaTransaction
+                    );
+                }
+
+                if ($direction === TransactionDirectionEnum::IN) {
+                    $transactionAddedEvent = TransactionInEvent::createFromArrayWithAccount(
+                        $event->getAddress(),
+                        $openSeaTransaction
+                    );
+                }
+
+                $this->eventDispatcher->dispatch($transactionAddedEvent);
+
+                $transactionHashes[] = $openSeaTransaction['hash'];
+            }
+        }
+
+        if (count($transactionHashes) !== 0) {
             $this->asyncEventDispatcher->dispatch(AccountAssetsChangedEvent::create($event->getAddress()));
             $this->asyncEventDispatcher->dispatch(AccountBalanceChangedEvent::create($event->getAddress()));
         }

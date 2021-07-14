@@ -43,9 +43,9 @@ class AccountTransaction
     private int $blockNumber;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="string", length=255)
      */
-    private int $tokenId;
+    private string $tokenId;
 
     /**
      * @ORM\Column(type="string", length=20)
@@ -125,12 +125,12 @@ class AccountTransaction
         return $this;
     }
 
-    public function getTokenId(): int
+    public function getTokenId(): string
     {
         return $this->tokenId;
     }
 
-    public function setTokenId(int $tokenId): self
+    public function setTokenId(string $tokenId): self
     {
         $this->tokenId = $tokenId;
 

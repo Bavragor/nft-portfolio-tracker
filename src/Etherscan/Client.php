@@ -6,7 +6,9 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Client as HttpClient;
 use JsonException;
 use NftPortfolioTracker\Entity\Project;
+use NftPortfolioTracker\Enum\TransactionDirectionEnum;
 use NftPortfolioTracker\Etherscan\Exception\EtherscanApiRequestFailed;
+use NftPortfolioTracker\Repository\ProjectRepository;
 use Psr\Log\LoggerInterface;
 use Spatie\GuzzleRateLimiterMiddleware\RateLimiterMiddleware;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,10 +21,11 @@ class Client
     private LoggerInterface $logger;
     private HttpClient $httpClient;
     private string $apiToken;
+    private ProjectRepository $projectRepository;
 
     private static array $transactionHashes = [];
 
-    public function __construct(LoggerInterface $logger, string $apiToken)
+    public function __construct(LoggerInterface $logger, ProjectRepository $projectRepository, string $apiToken)
     {
         $stack = HandlerStack::create();
         $stack->push(RateLimiterMiddleware::perSecond(3));
@@ -32,6 +35,7 @@ class Client
         ]);
 
         $this->logger = $logger;
+        $this->projectRepository = $projectRepository;
         $this->apiToken = $apiToken;
     }
 
@@ -81,6 +85,71 @@ class Client
             } catch (Throwable $throwable) {
                 throw new EtherscanApiRequestFailed($throwable->getMessage());
             }
+        }
+
+        return [];
+    }
+
+    public function getTransactionsForOpenSea(string $address, ?int $latestBlockNumber, int $direction): iterable
+    {
+        $openSeaProject = $this->projectRepository->findOneBy(['tokenName' => 'OpenSea']);
+
+        $queryParameters = [
+            'module' => 'account',
+            'action' => $direction === TransactionDirectionEnum::IN ? 'txlist' : 'txlistinternal',
+            'apikey' => $this->apiToken,
+            'sort' => 'desc',
+            'address' => $address,
+        ];
+
+        if ($latestBlockNumber !== null) {
+            $queryParameters['startblock'] = $latestBlockNumber;
+        }
+
+        $baseUrl = $openSeaProject->getEtherscanUrl();
+
+        $response = $this->httpClient->request(Request::METHOD_GET, $baseUrl, ['query' => $queryParameters]);
+
+        try {
+            $responseData = json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+
+            $this->validateApiResponse($responseData);
+
+            foreach ($responseData['result'] as $transaction) {
+                if ($direction === TransactionDirectionEnum::IN && $transaction['to'] !== $openSeaProject->getContract()) {
+                    continue;
+                }
+
+                if ($direction === TransactionDirectionEnum::OUT && $transaction['from'] !== $openSeaProject->getContract()) {
+                    continue;
+                }
+
+                if ($direction === TransactionDirectionEnum::IN) {
+                    $transaction['from'] = $openSeaProject->getContract();
+                    $transaction['to'] = $address;
+                }
+
+                if ($direction === TransactionDirectionEnum::OUT) {
+                    $transaction['gasPrice'] = 0;
+                }
+
+                if ((int) $transaction['isError'] === 1) {
+                    $transaction['value'] = 0;
+                }
+
+                $transaction['tokenSymbol'] = 'OS';
+                $transaction['tokenID'] = '0';
+
+                $transaction['apiUrl'] = $baseUrl;
+                yield $transaction;
+            }
+        } catch (EtherscanApiRequestFailed $etherscanApiRequestFailed) {
+            $this->logger->warning('Empty request ' . $etherscanApiRequestFailed->getMessage());
+            yield [];
+        } catch (JsonException $jsonException) {
+            throw new EtherscanApiRequestFailed($jsonException->getMessage() . $response->getBody());
+        } catch (Throwable $throwable) {
+            throw new EtherscanApiRequestFailed($throwable->getMessage());
         }
 
         return [];

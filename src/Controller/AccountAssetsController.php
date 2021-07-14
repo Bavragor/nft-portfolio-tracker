@@ -23,7 +23,7 @@ class AccountAssetsController extends AbstractController
      */
     public function index(string $address): Response
     {
-        $transactions = $this->accountAssetRepository->findBy(['account' => $address]);
+        $transactions = $this->accountAssetRepository->findBy(['account' => $address], ['timestamp' => 'desc']);
 
         return $this->render('account_assets/index.html.twig', [
             'controller_name' => 'AccountAssetsController',

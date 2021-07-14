@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Register{% endblock %}
+
+{% block body %}
+    <style>
+        .form-register {
+            width: 100%;
+            max-width: 330px;
+            padding: 15px;
+            padding-left: 0;
+        }
+
+        .form-register input[type="text"] {
+            margin-bottom: -1px;
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .form-register input[type="password"] {
+            margin-bottom: 10px;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+    </style>
+    <main class="form-register">
+        {{ form_start(registrationForm) }}
+        <h1 class="h3 mb-3 fw-normal">Register Account</h1>
+        {{ form_row(registrationForm.username) }}
+        {{ form_row(registrationForm.address) }}
+        {{ form_row(registrationForm.timezone) }}
+        {{ form_row(registrationForm.plainPassword, {
+            label: 'Password'
+        }) }}
+        {{ form_row(registrationForm.captcha) }}
+
+        {{ form_end(registrationForm) }}
+    </main>
+{% endblock %}
+
+{% block javascripts_user_defined %}
+
+{% endblock %}

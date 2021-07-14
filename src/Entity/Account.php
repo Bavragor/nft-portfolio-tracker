@@ -32,6 +32,17 @@ class Account
         $this->id = Uuid::v4();
     }
 
+    public static function createFromUser(AccountUser $user): self
+    {
+        $account = new self();
+        $account
+            ->setName($user->getUserIdentifier())
+            ->setAddress($user->getAddress())
+        ;
+
+        return $account;
+    }
+
     public function getId(): Uuid
     {
         return $this->id;

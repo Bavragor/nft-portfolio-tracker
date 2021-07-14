@@ -1,0 +1,207 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}NFT Drop Calendar{% endblock %}
+
+{% block body %}
+    <div id="menu">
+        <span id="menu-navi">
+            <button type="button" class="btn btn-primary btn-sm move-today" data-action="move-today">Today</button>
+            <button type="button" class="btn btn-primary btn-sm move-today" data-action="view-monthly">Monthly</button>
+            <button type="button" class="btn btn-primary btn-sm move-today" data-action="view-weekly">Weekly</button>
+            <button type="button" class="btn btn-primary btn-sm move-today" data-action="view-daily">Day</button>
+            <button type="button" class="btn btn-primary btn-sm move-day" data-action="move-prev">
+                <i class="bi bi-arrow-left" data-action="move-prev"></i>
+            </button>
+            <button type="button" class="btn btn-primary btn-sm move-day" data-action="move-next">
+                <i class="bi bi-arrow-right" data-action="move-next"></i>
+            </button>
+        </span>
+        <span id="renderRange" class="render-range"></span>
+    </div>
+
+    <div id="calendar" style="height: 800px;"></div>
+{% endblock %}
+
+{% block javascripts_user_defined %}
+    <script src="https://uicdn.toast.com/tui.code-snippet/v1.5.2/tui-code-snippet.min.js"></script>
+    <script src="https://uicdn.toast.com/tui.time-picker/latest/tui-time-picker.min.js"></script>
+    <script src="https://uicdn.toast.com/tui.date-picker/latest/tui-date-picker.min.js"></script>
+    <script src="https://uicdn.toast.com/tui-calendar/latest/tui-calendar.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.31/moment-timezone-with-data.js" integrity="sha512-ECoTMVFwwVtxjEBRjUMjviUd6hBjwDhBJI0+3W2YDs+ld5rHHUDr59T15gxwEPkGu5XLmkASUSvPgQe/Tpyodg==" crossorigin="anonymous"></script>
+
+    <script>
+        var currentCalendarDate = function(format) {
+            var currentDate = moment([cal.getDate().getFullYear(), cal.getDate().getMonth(), cal.getDate().getDate()]);
+
+            return currentDate.format(format);
+        }
+
+        var setRenderRangeText = function() {
+            var renderRange = document.getElementById('renderRange');
+            var options = cal.getOptions();
+            var viewName = cal.getViewName();
+
+            var html = [];
+            if (viewName === 'day') {
+                html.push(currentCalendarDate('YYYY.MM.DD'));
+            } else if (viewName === 'month' &&
+                (!options.month.visibleWeeksCount || options.month.visibleWeeksCount > 4)) {
+                html.push(currentCalendarDate('YYYY.MM'));
+            } else {
+                html.push(moment(cal.getDateRangeStart().getTime()).format('YYYY.MM.DD'));
+                html.push(' ~ ');
+                html.push(moment(cal.getDateRangeEnd().getTime()).format(' MM.DD'));
+            }
+            renderRange.innerHTML = html.join('');
+        }
+
+        var getDataAction = function(target) {
+            return target.dataset ? target.dataset.action : target.getAttribute('data-action');
+        }
+
+        var onClickNavi = function (e) {
+            var action = getDataAction(e.target);
+
+            switch (action) {
+                case 'move-prev':
+                    cal.prev();
+                    break;
+                case 'move-next':
+                    cal.next();
+                    break;
+                case 'move-today':
+                    cal.today();
+                    break;
+                case 'view-monthly':
+                    cal.changeView('month', true)
+                    break;
+                case 'view-weekly':
+                    cal.changeView('week', true)
+                    break;
+                case 'view-daily':
+                    cal.changeView('day', true)
+                    break;
+                default:
+                    return;
+            }
+
+            setRenderRangeText();
+            setSchedules();
+        }
+
+        var setSchedules = function () {
+            var dateStart = cal.getDateRangeStart().toDate().toISOString();
+            var dateEnd = cal.getDateRangeEnd().toDate().toISOString();
+
+            console.log(dateStart, dateEnd);
+
+            var params = new URLSearchParams({
+                start_date: dateStart,
+                end_date: dateEnd
+            });
+
+            cal.clear();
+
+            fetch('{{ app.request.baseUrl }}/project/calendar/schedules?' + params.toString())
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    var schedules = [];
+
+                    data.forEach(function (nftEvent, key) {
+                        var body = '<p>Type: '+nftEvent.type+'</p>';
+
+                        if (nftEvent.initialPrice != null && nftEvent.currency != null) {
+                            body = body + '<p>Mint price: '+nftEvent.initialPrice+' '+nftEvent.currency+'</p>';
+                        }
+
+                        body = body + '<p><a href="'+nftEvent.url+'">'+nftEvent.url+'</a></p>';
+
+                        var schedule = {
+                            id: key,
+                            calendarId: 1,
+                            category: 'time',
+                            dueDateClass: '',
+                            title: nftEvent.name,
+                            isReadOnly: true,
+                            body: body
+                        };
+
+                        if (nftEvent.eventDateStart == null && nftEvent.eventDateEnd == null) {
+                            schedule['isAllDay'] = true;
+                        }
+
+                        if (nftEvent.eventDateStart != null) {
+                            schedule['start'] = nftEvent.eventDateStart;
+                        }
+
+                        if (nftEvent.eventDateEnd != null) {
+                            schedule['end'] = nftEvent.eventDateEnd;
+                        }
+
+                        schedules.push(schedule);
+                    });
+
+                    cal.createSchedules(schedules);
+
+
+                    cal.render(true);
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+        }
+
+        var setEventListener = function(resizeThrottled) {
+            document.getElementById('menu-navi').onclick = onClickNavi;
+
+            window.addEventListener('resize', resizeThrottled);
+        }
+
+        var Calendar = tui.Calendar;
+        var cal = new Calendar('#calendar', {
+            calendars: [{
+                id: '1',
+                name: 'My Calendar',
+                color: '#ffffff',
+                bgColor: '#9e5fff',
+                dragBgColor: '#9e5fff',
+                borderColor: '#9e5fff'
+            }],
+            defaultView: 'week', // set 'week' or 'day'
+            timezone: {
+                zones: [
+                    {
+                        timezoneName: 'UTC',
+                        displayLabel: 'UTC',
+                        tooltip: 'UTC'
+                    },
+                    {
+                        timezoneName: '{{ account.timezone }}',
+                        displayLabel: '{{ account.timezone }}',
+                        tooltip: '{{ account.timezone }}'
+                    }
+                ],
+                offsetCalculator: function(timezoneName, timestamp){
+                    // e.g. +09:00 => -540, -04:00 => 240
+                    return moment.tz.zone(timezoneName).utcOffset(timestamp);
+                },
+            },
+            useDetailPopup: true,
+            taskView: false,
+            scheduleView: ['time']
+        });
+
+        var resizeThrottled = tui.util.throttle(function() {
+            cal.render();
+        }, 50);
+
+        document.addEventListener("DOMContentLoaded", function() {
+            setRenderRangeText();
+            setSchedules();
+            setEventListener(resizeThrottled);
+        });
+    </script>
+{% endblock %}

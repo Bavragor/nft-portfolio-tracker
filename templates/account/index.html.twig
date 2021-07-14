@@ -19,7 +19,11 @@
 
     <ul>
         {% for account in accounts %}
-            <li><a href="{{ url('account_assets', {address: account.address}) }}">{{ account.name }}</a></li>
+            <li>
+                <a href="{{ url('account_assets', {address: account.address}) }}">{{ account.name }}</a>
+                <a href="{{ path('account_delete', {'address': account.address}) }}"><i class="bi bi-file-earmark-x text-danger"></i></a>
+                <a href="{{ path('account_refresh', {'address': account.address}) }}"><i class="bi bi-arrow-repeat"></i></a>
+            </li>
         {% endfor %}
     </ul>
 </div>

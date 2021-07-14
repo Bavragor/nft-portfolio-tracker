@@ -23,6 +23,15 @@ class AccountTransactionRepository extends ServiceEntityRepository
         parent::__construct($registry, AccountTransaction::class);
     }
 
+    public function truncateTable(string $address): void
+    {
+        $connection = $this->getEntityManager()->getConnection();
+        $tableName = $this->getEntityManager()->getClassMetadata(AccountTransaction::class)->getTableName();
+
+        $connection->delete($tableName, ['from_address' => $address]);
+        $connection->delete($tableName, ['to_address' => $address]);
+    }
+
     public function save(AccountTransaction $transaction): void
     {
         $this->getEntityManager()->persist($transaction);

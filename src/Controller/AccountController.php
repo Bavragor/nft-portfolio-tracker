@@ -3,7 +3,11 @@
 namespace NftPortfolioTracker\Controller;
 
 use NftPortfolioTracker\Entity\Account;
+use NftPortfolioTracker\Event\Account\AccountAddedEvent;
+use NftPortfolioTracker\Event\Account\AccountDeletedEvent;
+use NftPortfolioTracker\Event\Account\AccountUpdatedEvent;
 use NftPortfolioTracker\Repository\AccountRepository;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -13,10 +17,12 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class AccountController extends AbstractController
 {
+    private EventDispatcherInterface $eventDispatcher;
     private AccountRepository $accountRepository;
 
-    public function __construct(AccountRepository $accountRepository)
+    public function __construct(EventDispatcherInterface $eventDispatcher, AccountRepository $accountRepository)
     {
+        $this->eventDispatcher = $eventDispatcher;
         $this->accountRepository = $accountRepository;
     }
 
@@ -59,6 +65,8 @@ class AccountController extends AbstractController
             $entityManager->persist($accountData);
             $entityManager->flush();
 
+            $this->eventDispatcher->dispatch(AccountAddedEvent::create($account->getAddress()));
+
             return $this->redirectToRoute('account');
         }
 
@@ -66,5 +74,25 @@ class AccountController extends AbstractController
             'controller_name' => 'AccountController',
             'form' => $form->createView()
         ]);
+    }
+
+    /**
+     * @Route("/account/delete/{address}", name="account_delete")
+     */
+    public function delete(string $address): Response
+    {
+        $this->eventDispatcher->dispatch(AccountDeletedEvent::create($address));
+
+        return $this->redirectToRoute('account');
+    }
+
+    /**
+     * @Route("/account/refresh/{address}", name="account_refresh")
+     */
+    public function refresh(string $address): Response
+    {
+        $this->eventDispatcher->dispatch(AccountUpdatedEvent::create($address, []));
+
+        return $this->redirectToRoute('account');
     }
 }

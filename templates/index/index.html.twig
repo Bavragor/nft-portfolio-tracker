@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+    <h2 class="pb-2 border-bottom">Current Features</h2>
+    <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+        <div class="feature col">
+            <h2>NFT Drop Calendar</h2>
+            <p>Upcoming NFTs in a calendar.</p>
+            <p>Feel free to provide proposals about unlisted drops, which will be online after verification.</p>
+            <p>A sign up is necessary and could be beneficial for upcoming features</p>
+            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                <a href="{{ url('calendar_index') }}" class="btn btn-primary">Go to calendar</a>
+            {% else %}
+                <a href="{{ url('app_register') }}" class="btn btn-primary">Register</a>
+            {% endif %}
+        </div>
+    </div>
+    <h2 class="pb-2 border-bottom">Upcoming features</h2>
+    <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+        <div class="feature col">
+            <h2>NFT Portfolio Tracker</h2>
+            <p>Track your mints, purchases and sells</p>
+            <p>Estimate the value of your current holdings</p>
+            <p>Compare to other NFT collectors</p>
+            <p>Register for notifications of latest NFT drops</p>
+        </div>
+    </div>
+{% endblock %}

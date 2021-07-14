@@ -5,6 +5,7 @@ namespace NftPortfolioTracker\Repository;
 use NftPortfolioTracker\Entity\Account;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use NftPortfolioTracker\Entity\AccountUser;
 
 /**
  * @method Account|null find($id, $lockMode = null, $lockVersion = null)
@@ -19,32 +20,27 @@ class AccountRepository extends ServiceEntityRepository
         parent::__construct($registry, Account::class);
     }
 
-    // /**
-    //  * @return Account[] Returns an array of Account objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    public function delete(string $address): void
     {
-        return $this->createQueryBuilder('a')
-            ->andWhere('a.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('a.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        $connection = $this->getEntityManager()->getConnection();
+        $tableName = $this->getEntityManager()->getClassMetadata(Account::class)->getTableName();
 
-    /*
-    public function findOneBySomeField($value): ?Account
-    {
-        return $this->createQueryBuilder('a')
-            ->andWhere('a.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        $connection->delete($tableName, ['address' => $address]);
     }
-    */
+
+    public function createOrGetAccountByUser(AccountUser $user): Account
+    {
+        $existingAccount = $this->findOneBy(['address' => strtolower(trim($user->getAddress()))]);
+
+        if ($existingAccount !== null) {
+            return $existingAccount;
+        }
+
+        $account = Account::createFromUser($user);
+
+        $this->getEntityManager()->persist($account);
+        $this->getEntityManager()->flush();
+
+        return $account;
+    }
 }

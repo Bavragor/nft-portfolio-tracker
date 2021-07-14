@@ -1,9 +1,11 @@
 <?php
 
-namespace NftPortfolioTracker\Controller;
+namespace NftPortfolioTracker\Controller\Project;
 
 use NftPortfolioTracker\Entity\Project;
+use NftPortfolioTracker\Event\Contract\ContractAddedEvent;
 use NftPortfolioTracker\Repository\ProjectRepository;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -13,10 +15,12 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ProjectController extends AbstractController
 {
+    private EventDispatcherInterface $eventDispatcher;
     private ProjectRepository $projectRepository;
 
-    public function __construct(ProjectRepository $projectRepository)
+    public function __construct(EventDispatcherInterface $eventDispatcher, ProjectRepository $projectRepository)
     {
+        $this->eventDispatcher = $eventDispatcher;
         $this->projectRepository = $projectRepository;
     }
 
@@ -25,6 +29,9 @@ class ProjectController extends AbstractController
      */
     public function index(): Response
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $this->redirectToRoute('calendar_index');
+        }
         return $this->render('projects/index.html.twig', [
             'controller_name' => 'ProjectsController',
             'projects' => $this->projectRepository->findAll(),
@@ -60,6 +67,8 @@ class ProjectController extends AbstractController
             $entityManager = $this->getDoctrine()->getManager();
             $entityManager->persist($projectData);
             $entityManager->flush();
+
+            $this->eventDispatcher->dispatch(ContractAddedEvent::create($project->getContract()));
 
             return $this->redirectToRoute('project_create');
         }

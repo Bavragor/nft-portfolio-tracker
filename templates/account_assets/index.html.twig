@@ -17,10 +17,19 @@
         <li>Your template at <code><a href="{{ '/home/kevin/Projects/nft-portfolio-tracker/templates/account_assets/index.html.twig'|file_link(0) }}">templates/account_assets/index.html.twig</a></code></li>
     </ul>
 
-    <ul>
-        {% for transaction in transactions %}
-            <li>{{ transaction.price }}</li>
-        {% endfor %}
-    </ul>
+    <div class="table-responsive">
+        <table class="table">
+            {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction.tokenSymbol }}</td>
+                    <td>#{{ transaction.tokenId }}</td>
+                    <td>{{ transaction.price }}</td>
+                    <td>{{ transaction.gasPrice }}</td>
+                    <td>{% if transaction.direction == 1 %}<i class="bi bi-currency-dollar text-success"></i>{% else %}<i class="bi bi-currency-dollar text-danger"></i>{% endif %}</td>
+                    <td><a href="https://etherscan.io/tx/{{ transaction.transactionHash }}" target="_blank"><img width="15" src="https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/31987/eth-diamond-black.png" alt="ethereum"/></a></td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
 </div>
 {% endblock %}

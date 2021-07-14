@@ -21,9 +21,17 @@ services:
             - '../src/Kernel.php'
             - '../src/Tests/'
 
+    Symfony\Component\HttpFoundation\Session\Storage\Handler\PdoSessionHandler:
+        arguments:
+            - '%env(DATABASE_URL)%'
+
     NftPortfolioTracker\Etherscan\Client:
         arguments:
             $apiToken: '%env(resolve:ETHERSCAN_API_KEY)%'
+
+    NftPortfolioTracker\Controller\RegistrationController:
+        arguments:
+            $formFactory: '@form.factory'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
