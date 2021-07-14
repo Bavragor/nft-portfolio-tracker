@@ -54,6 +54,11 @@ class NftEvent
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
+    private ?string $twitterUrl;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
     private ?string $platform;
 
     /**
@@ -177,6 +182,17 @@ class NftEvent
         return $this;
     }
 
+    public function getTwitterUrl(): ?string
+    {
+        return $this->twitterUrl;
+    }
+
+    public function setTwitterUrl(?string $twitterUrl): NftEvent
+    {
+        $this->twitterUrl = $twitterUrl;
+        return $this;
+    }
+
     public function toArray(): array
     {
         return [
@@ -186,6 +202,7 @@ class NftEvent
             'name' => $this->getName(),
             'type' => $this->getType(),
             'url' => $this->getUrl(),
+            'twitterUrl' => $this->getTwitterUrl(),
             'platform' => $this->getPlatform(),
             'initialPrice' => $this->getInitialPrice(),
             'currency' => $this->getCurrency(),

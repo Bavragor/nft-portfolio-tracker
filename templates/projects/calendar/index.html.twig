@@ -117,7 +117,13 @@
                             body = body + '<p>Mint price: '+nftEvent.initialPrice+' '+nftEvent.currency+'</p>';
                         }
 
-                        body = body + '<p><a href="'+nftEvent.url+'">'+nftEvent.url+'</a></p>';
+                        if (nftEvent.url != null) {
+                            body = body + '<p><a target="_blank" href="' + nftEvent.url + '"><i class="bi bi-globe"></i>' + nftEvent.url + '</a></p>';
+                        }
+
+                        if (nftEvent.twitterUrl != null) {
+                            body = body + '<p><a target="_blank" href="' + nftEvent.twitterUrl + '"><i class="bi bi-twitter"></i>' + nftEvent.twitterUrl + '</a></p>';
+                        }
 
                         var schedule = {
                             id: key,

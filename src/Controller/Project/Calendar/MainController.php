@@ -7,6 +7,8 @@ use NftPortfolioTracker\Repository\NftEventRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
@@ -39,14 +41,28 @@ class MainController extends AbstractController
      */
     public function create(Request $request): Response
     {
-        $account = new NftEvent();
+        $nftEvent = new NftEvent();
+        $nftEvent->setCurrency('ETH');
 
-        $form = $this->createFormBuilder($account)
+        $form = $this->createFormBuilder($nftEvent)
             ->add('name', TextType::class)
             ->add('type', ChoiceType::class, ['choices' => ['Listed' => 'Listed', 'Mint' => 'Mint', 'Reveal' => 'Reveal']])
             ->add('url', UrlType::class)
-            ->add('eventDateStart', DateTimeType::class)
-            ->add('eventDateEnd', DateTimeType::class)
+            ->add('twitterUrl', UrlType::class)
+            ->add('initialPrice', NumberType::class, ['scale' => 18])
+            ->add('currency', TextType::class)
+            ->add('eventDateStart', DateTimeType::class, [
+                'widget' => 'single_text',
+                'html5' => true,
+                'model_timezone' => 'UTC',
+                'view_timezone' => $this->getUser()->getTimezone(),
+            ])
+            ->add('eventDateEnd', DateTimeType::class, [
+                'widget' => 'single_text',
+                'html5' => true,
+                'model_timezone' => 'UTC',
+                'view_timezone' => $this->getUser()->getTimezone(),
+            ])
             ->add('save', SubmitType::class, ['label' => 'Create NFT Event'])
             ->getForm();
 
@@ -63,7 +79,7 @@ class MainController extends AbstractController
             $entityManager->persist($nftEvent);
             $entityManager->flush();
 
-            return $this->redirectToRoute('calendar_index');
+            return $this->redirectToRoute('nft_event_create');
         }
 
         return $this->render('projects/calendar/create.html.twig', [
