@@ -27,7 +27,15 @@
         {{ form_start(registrationForm) }}
         <h1 class="h3 mb-3 fw-normal">Register Account</h1>
         {{ form_row(registrationForm.username) }}
-        {{ form_row(registrationForm.address) }}
+
+        <div class="mb-3">
+            {{ form_label(registrationForm.address, 'Public wallet address') }} <img width="15" src="https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/31987/eth-diamond-black.png" alt="ethereum"/>
+            {{ form_widget(registrationForm.address) }}
+
+            <div class="form-error">
+                {{ form_errors(registrationForm.address) }}
+            </div>
+        </div>
         {{ form_row(registrationForm.timezone) }}
         {{ form_row(registrationForm.plainPassword, {
             label: 'Password'
