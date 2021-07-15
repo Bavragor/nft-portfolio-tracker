@@ -3,6 +3,7 @@
 namespace NftPortfolioTracker\Controller\Project\Calendar;
 
 use NftPortfolioTracker\Entity\NftEvent;
+use NftPortfolioTracker\Entity\NftEventProposal;
 use NftPortfolioTracker\Repository\NftEventRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -12,6 +13,7 @@ use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,10 +31,17 @@ class MainController extends AbstractController
     /**
      * @Route("/project/calendar", name="calendar_index")
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $form = $this->createEventForm($request, new NftEventProposal());
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->redirectToRoute('calendar_index');
+        }
+
         return $this->render('projects/calendar/index.html.twig', [
-            'account' => $this->getUser()
+            'account' => $this->getUser(),
+            'proposalFrom' => $form->createView()
         ]);
     }
 
@@ -41,12 +50,47 @@ class MainController extends AbstractController
      */
     public function create(Request $request): Response
     {
-        $nftEvent = new NftEvent();
+        $form = $this->createEventForm($request, new NftEvent());
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            return $this->redirectToRoute('nft_event_create');
+        }
+
+        return $this->render('projects/calendar/create.html.twig', [
+            'form' => $form->createView()
+        ]);
+    }
+
+    /**
+     * @Route("/project/calendar/schedules", name="calendar_schedules")
+     */
+    public function schedules(Request $request): Response
+    {
+        $nftEvents = [];
+
+        if ($request->get('start_date') !== null && $request->get('end_date') !== null) {
+            $nftEvents = $this->nftEventRepository->findBetweenDates($request->get('start_date'), $request->get('end_date'));
+        }
+
+        $nftEventsAsJson = [];
+
+        foreach ($nftEvents as $nftEvent) {
+            $nftEventsAsJson[] = $nftEvent->toArray();
+        }
+
+        return JsonResponse::fromJsonString(json_encode($nftEventsAsJson, JSON_THROW_ON_ERROR));
+    }
+
+    private function createEventForm(Request $request, NftEvent $nftEvent): FormInterface
+    {
+        //$nftEvent = new NftEvent();
         $nftEvent->setCurrency('ETH');
+        $nftEvent->setPlatform('Ethereum');
 
         $form = $this->createFormBuilder($nftEvent)
             ->add('name', TextType::class)
             ->add('type', ChoiceType::class, ['choices' => ['Listed' => 'Listed', 'Mint' => 'Mint', 'Reveal' => 'Reveal']])
+            ->add('platform', ChoiceType::class, ['choices' => ['Ethereum' => 'Ethereum', 'Polygon' => 'Polygon', 'BSC' => 'BSC']])
             ->add('url', UrlType::class)
             ->add('twitterUrl', UrlType::class)
             ->add('initialPrice', NumberType::class, ['scale' => 18])
@@ -54,14 +98,12 @@ class MainController extends AbstractController
             ->add('eventDateStart', DateTimeType::class, [
                 'widget' => 'single_text',
                 'html5' => true,
-                'model_timezone' => 'UTC',
-                'view_timezone' => $this->getUser()->getTimezone(),
+                'model_timezone' => 'UTC'
             ])
             ->add('eventDateEnd', DateTimeType::class, [
                 'widget' => 'single_text',
                 'html5' => true,
-                'model_timezone' => 'UTC',
-                'view_timezone' => $this->getUser()->getTimezone(),
+                'model_timezone' => 'UTC'
             ])
             ->add('save', SubmitType::class, ['label' => 'Create NFT Event'])
             ->getForm();
@@ -91,32 +133,8 @@ class MainController extends AbstractController
             $entityManager = $this->getDoctrine()->getManager();
             $entityManager->persist($nftEvent);
             $entityManager->flush();
-
-            return $this->redirectToRoute('nft_event_create');
         }
 
-        return $this->render('projects/calendar/create.html.twig', [
-            'form' => $form->createView()
-        ]);
-    }
-
-    /**
-     * @Route("/project/calendar/schedules", name="calendar_schedules")
-     */
-    public function schedules(Request $request): Response
-    {
-        $nftEvents = [];
-
-        if ($request->get('start_date') !== null && $request->get('end_date') !== null) {
-            $nftEvents = $this->nftEventRepository->findBetweenDates($request->get('start_date'), $request->get('end_date'));
-        }
-
-        $nftEventsAsJson = [];
-
-        foreach ($nftEvents as $nftEvent) {
-            $nftEventsAsJson[] = $nftEvent->toArray();
-        }
-
-        return JsonResponse::fromJsonString(json_encode($nftEventsAsJson, JSON_THROW_ON_ERROR));
+        return $form;
     }
 }
