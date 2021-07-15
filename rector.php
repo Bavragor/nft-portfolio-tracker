@@ -12,6 +12,11 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 
     // Define what rule sets will be applied - usage vendor/bin/rector process <path/to/file.php>
     $containerConfigurator->import(SetList::CODE_QUALITY);
+    $containerConfigurator->import(SetList::DEAD_CODE);
+    $containerConfigurator->import(SetList::CODE_QUALITY_STRICT);
+    $containerConfigurator->import(SetList::EARLY_RETURN);
+
+    $containerConfigurator->services()->remove(\Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnTagRector::class);
 
     // skip root namespace classes, like \DateTime or \Exception [default: true]
     $parameters->set(Option::IMPORT_SHORT_CLASSES, true);
