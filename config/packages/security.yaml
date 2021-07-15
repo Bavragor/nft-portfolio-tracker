@@ -37,6 +37,7 @@ security:
          - { path: ^/register, roles: PUBLIC_ACCESS }
          - { path: ^/login, roles: PUBLIC_ACCESS }
          - { path: ^/home, roles: PUBLIC_ACCESS }
-         - { path: ^/project/calendar, roles: IS_AUTHENTICATED_FULLY }
+         - { path: ^/project/calendar/create, roles: ROLE_ADMIN }
+         - { path: ^/project/calendar, roles: PUBLIC_ACCESS }
          - { path: ^/project, roles: ROLE_ADMIN }
          - { path: ^/account, roles: ROLE_ADMIN }

@@ -4,19 +4,32 @@
 
 {% block body %}
     <div id="menu">
-        <span id="menu-navi">
-            <button type="button" class="btn btn-primary btn-sm move-today" data-action="move-today">Today</button>
-            <button type="button" class="btn btn-primary btn-sm move-today" data-action="view-monthly">Monthly</button>
-            <button type="button" class="btn btn-primary btn-sm move-today" data-action="view-weekly">Weekly</button>
-            <button type="button" class="btn btn-primary btn-sm move-today" data-action="view-daily">Day</button>
-            <button type="button" class="btn btn-primary btn-sm move-day" data-action="move-prev">
-                <i class="bi bi-arrow-left" data-action="move-prev"></i>
-            </button>
-            <button type="button" class="btn btn-primary btn-sm move-day" data-action="move-next">
-                <i class="bi bi-arrow-right" data-action="move-next"></i>
-            </button>
-        </span>
-        <span id="renderRange" class="render-range"></span>
+        <div id="menu-navi">
+            <div class="row" style="margin-bottom: 15px;">
+                <div class="col col-md-1" style="width: 5%;">
+                    <label for="timezone">Timezone: </label></div>
+                <div class="col col-md-1" style="width: 10%;">
+                    <input class="form-control" type="text" name="timezone" value="" style="height: 30px;" />
+                </div>
+                    <div class="col col-md-2" style="width: 10%;">
+                  <button type="button" class="btn btn-primary btn-sm move-today" data-action="add-timezone">Add Timezone</button>
+                </div>
+
+                <div class="col col-md-7">
+                    <button type="button" class="btn btn-primary btn-sm move-today" data-action="move-today">Today</button>
+                    <button type="button" class="btn btn-primary btn-sm move-today" data-action="view-monthly">Monthly</button>
+                    <button type="button" class="btn btn-primary btn-sm move-today" data-action="view-weekly">Weekly</button>
+                    <button type="button" class="btn btn-primary btn-sm move-today" data-action="view-daily">Day</button>
+                    <button type="button" class="btn btn-primary btn-sm move-day" data-action="move-prev">
+                        <i class="bi bi-arrow-left" data-action="move-prev"></i>
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm move-day" data-action="move-next">
+                        <i class="bi bi-arrow-right" data-action="move-next"></i>
+                    </button>
+                    <span id="renderRange" class="render-range" style="margin-left: 10px;"></span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="calendar" style="height: 800px;"></div>
@@ -31,6 +44,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.31/moment-timezone-with-data.js" integrity="sha512-ECoTMVFwwVtxjEBRjUMjviUd6hBjwDhBJI0+3W2YDs+ld5rHHUDr59T15gxwEPkGu5XLmkASUSvPgQe/Tpyodg==" crossorigin="anonymous"></script>
 
     <script>
+        var timezones = [
+            {
+                timezoneName: 'UTC',
+                displayLabel: 'UTC',
+                tooltip: 'UTC'
+            }
+        ];
+
         var currentCalendarDate = function(format) {
             var currentDate = moment([cal.getDate().getFullYear(), cal.getDate().getMonth(), cal.getDate().getDate()]);
 
@@ -81,6 +102,24 @@
                     break;
                 case 'view-daily':
                     cal.changeView('day', true)
+                    break;
+                case 'add-timezone':
+                    if (document.getElementsByName('timezone')[0].value != undefined && document.getElementsByName('timezone')[0].value.length <= 0) {
+                        break;
+                    }
+
+                    if (moment.tz.zone(document.getElementsByName('timezone')[0].value) == undefined) {
+                        break;
+                    }
+
+                    timezones.push({
+                        timezoneName: document.getElementsByName('timezone')[0].value,
+                        displayLabel: document.getElementsByName('timezone')[0].value,
+                        tooltip: document.getElementsByName('timezone')[0].value
+                    })
+                    var options = cal.getOptions();
+                    options['timezone'] = timezoneObjectCreator(timezones);
+                    cal.setOptions(options, false);
                     break;
                 default:
                     return;
@@ -166,6 +205,24 @@
             window.addEventListener('resize', resizeThrottled);
         }
 
+        {% if account != null %}
+        timezones.push({
+            timezoneName: '{{ account.timezone }}',
+            displayLabel: '{{ account.timezone }}',
+            tooltip: '{{ account.timezone }}'
+        })
+        {% endif %}
+
+        var timezoneObjectCreator = function (_timezones) {
+            return {
+                zones: _timezones,
+                offsetCalculator: function(timezoneName, timestamp){
+                    // e.g. +09:00 => -540, -04:00 => 240
+                    return moment.tz.zone(timezoneName).utcOffset(timestamp);
+                }
+            };
+        };
+
         var Calendar = tui.Calendar;
         var cal = new Calendar('#calendar', {
             calendars: [{
@@ -177,24 +234,7 @@
                 borderColor: '#9e5fff'
             }],
             defaultView: 'week', // set 'week' or 'day'
-            timezone: {
-                zones: [
-                    {
-                        timezoneName: 'UTC',
-                        displayLabel: 'UTC',
-                        tooltip: 'UTC'
-                    },
-                    {
-                        timezoneName: '{{ account.timezone }}',
-                        displayLabel: '{{ account.timezone }}',
-                        tooltip: '{{ account.timezone }}'
-                    }
-                ],
-                offsetCalculator: function(timezoneName, timestamp){
-                    // e.g. +09:00 => -540, -04:00 => 240
-                    return moment.tz.zone(timezoneName).utcOffset(timestamp);
-                },
-            },
+            timezone: timezoneObjectCreator(timezones),
             useDetailPopup: true,
             taskView: false,
             scheduleView: ['time']
@@ -208,6 +248,7 @@
             setRenderRangeText();
             setSchedules();
             setEventListener(resizeThrottled);
+            document.getElementById('menu-navi').onclick = onClickNavi;
         });
     </script>
 {% endblock %}
