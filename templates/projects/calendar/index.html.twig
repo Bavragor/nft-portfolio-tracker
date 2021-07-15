@@ -206,11 +206,19 @@
         }
 
         {% if account != null %}
-        timezones.push({
-            timezoneName: '{{ account.timezone }}',
-            displayLabel: '{{ account.timezone }}',
-            tooltip: '{{ account.timezone }}'
-        })
+        if (moment.tz.zone('{{ account.timezone }}') != undefined) {
+            timezones.push({
+                timezoneName: '{{ account.timezone }}',
+                displayLabel: '{{ account.timezone }}',
+                tooltip: '{{ account.timezone }}'
+            })
+        } else {
+            timezones.push({
+                timezoneName: moment.tz.guess(),
+                displayLabel: moment.tz.guess(),
+                tooltip: moment.tz.guess()
+            })
+        }
         {% endif %}
 
         var timezoneObjectCreator = function (_timezones) {
