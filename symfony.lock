@@ -1,6 +1,21 @@
 {
+    "amphp/amp": {
+        "version": "v2.5.2"
+    },
+    "amphp/byte-stream": {
+        "version": "v1.8.1"
+    },
     "composer/package-versions-deprecated": {
         "version": "1.11.99.2"
+    },
+    "composer/semver": {
+        "version": "3.2.5"
+    },
+    "composer/xdebug-handler": {
+        "version": "2.0.1"
+    },
+    "dnoegel/php-xdg-base-dir": {
+        "version": "v0.1.1"
     },
     "doctrine/annotations": {
         "version": "1.0",
@@ -85,6 +100,12 @@
     "egulias/email-validator": {
         "version": "3.1.1"
     },
+    "felixfbecker/advanced-json-rpc": {
+        "version": "v3.2.1"
+    },
+    "felixfbecker/language-server-protocol": {
+        "version": "1.5.1"
+    },
     "friendsofphp/proxy-manager-lts": {
         "version": "v1.0.5"
     },
@@ -112,14 +133,23 @@
     "myclabs/deep-copy": {
         "version": "1.10.2"
     },
+    "netresearch/jsonmapper": {
+        "version": "v4.0.0"
+    },
     "nikic/php-parser": {
         "version": "v4.11.0"
+    },
+    "openlss/lib-array2xml": {
+        "version": "1.0.0"
     },
     "phar-io/manifest": {
         "version": "2.0.1"
     },
     "phar-io/version": {
         "version": "3.1.0"
+    },
+    "phpcompatibility/php-compatibility": {
+        "version": "9.3.5"
     },
     "phpdocumentor/reflection-common": {
         "version": "2.2.0"
@@ -132,6 +162,9 @@
     },
     "phpspec/prophecy": {
         "version": "1.13.0"
+    },
+    "phpstan/phpstan": {
+        "version": "0.12.91"
     },
     "phpunit/php-code-coverage": {
         "version": "9.2.6"
@@ -188,6 +221,9 @@
     },
     "ralouphie/getallheaders": {
         "version": "3.0.3"
+    },
+    "rector/rector": {
+        "version": "0.11.36"
     },
     "sebastian/cli-parser": {
         "version": "1.0.1"
@@ -251,6 +287,18 @@
     },
     "spatie/guzzle-rate-limiter-middleware": {
         "version": "2.0.1"
+    },
+    "squizlabs/php_codesniffer": {
+        "version": "3.6",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "master",
+            "version": "3.6",
+            "ref": "1019e5c08d4821cb9b77f4891f8e9c31ff20ac6f"
+        },
+        "files": [
+            "phpcs.xml.dist"
+        ]
     },
     "symfony/asset": {
         "version": "v5.3.2"
@@ -634,6 +682,9 @@
     "symfony/yaml": {
         "version": "v5.3.3"
     },
+    "symplify/easy-coding-standard": {
+        "version": "9.4.22"
+    },
     "theseer/tokenizer": {
         "version": "1.2.0"
     },
@@ -643,7 +694,13 @@
     "twig/twig": {
         "version": "v3.3.2"
     },
+    "vimeo/psalm": {
+        "version": "4.8.1"
+    },
     "webmozart/assert": {
         "version": "1.10.0"
+    },
+    "webmozart/path-util": {
+        "version": "2.3.0"
     }
 }

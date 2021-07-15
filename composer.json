@@ -51,7 +51,9 @@
         "twig/twig": "^2.12|^3.0"
     },
     "require-dev": {
+        "phpcompatibility/php-compatibility": "^9.3",
         "phpunit/phpunit": "^9.5",
+        "rector/rector": "^0.11.36",
         "symfony/browser-kit": "^5.3",
         "symfony/css-selector": "^5.3",
         "symfony/debug-bundle": "^5.3",
@@ -59,7 +61,9 @@
         "symfony/phpunit-bridge": "^5.3",
         "symfony/stopwatch": "^5.3",
         "symfony/var-dumper": "^5.3",
-        "symfony/web-profiler-bundle": "^5.3"
+        "symfony/web-profiler-bundle": "^5.3",
+        "symplify/easy-coding-standard": "^9.4",
+        "vimeo/psalm": "^4.8"
     },
     "config": {
         "optimize-autoloader": true,
@@ -89,9 +93,11 @@
             "assets:install %PUBLIC_DIR%": "symfony-cmd"
         },
         "post-install-cmd": [
+            "\"vendor/bin/phpcs\" --config-set installed_paths vendor/phpcompatibility/php-compatibility",
             "@auto-scripts"
         ],
         "post-update-cmd": [
+            "\"vendor/bin/phpcs\" --config-set installed_paths vendor/phpcompatibility/php-compatibility",
             "@auto-scripts"
         ]
     },
