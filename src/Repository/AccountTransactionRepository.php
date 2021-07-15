@@ -2,12 +2,12 @@
 
 namespace NftPortfolioTracker\Repository;
 
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
-use NftPortfolioTracker\Entity\AccountTransaction;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use NftPortfolioTracker\Entity\AccountTransaction;
 use function Doctrine\ORM\QueryBuilder;
 
 /**

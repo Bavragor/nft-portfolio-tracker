@@ -4,8 +4,8 @@ namespace NftPortfolioTracker\Entity;
 
 use DateTime;
 use DateTimeInterface;
-use NftPortfolioTracker\Repository\NftEventRepository;
 use Doctrine\ORM\Mapping as ORM;
+use NftPortfolioTracker\Repository\NftEventRepository;
 use Symfony\Component\Uid\Uuid;
 
 /**

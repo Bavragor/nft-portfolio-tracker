@@ -2,9 +2,9 @@
 
 namespace NftPortfolioTracker\Repository;
 
-use NftPortfolioTracker\Entity\AccountAsset;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use NftPortfolioTracker\Entity\AccountAsset;
 use function Doctrine\ORM\QueryBuilder;
 
 /**

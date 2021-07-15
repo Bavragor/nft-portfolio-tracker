@@ -36,7 +36,7 @@ class UTCDateTimeType extends DateTimeType
             self::getUtc()
         );
 
-        if (! $converted) {
+        if (!$converted) {
             throw ConversionException::conversionFailedFormat(
                 $value,
                 $this->getName(),

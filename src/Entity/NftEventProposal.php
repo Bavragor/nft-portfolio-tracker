@@ -10,5 +10,4 @@ use NftPortfolioTracker\Repository\NftEventProposalRepository;
  */
 class NftEventProposal extends NftEvent
 {
-
 }

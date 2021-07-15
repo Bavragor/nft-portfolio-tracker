@@ -53,8 +53,7 @@ abstract class TransactionAddedEvent
         int $gasPriceInWei,
         int $gasUsed,
         int $timestamp
-    ): self
-    {
+    ): self {
         return new static(
             $from,
             $to,

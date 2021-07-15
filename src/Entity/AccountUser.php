@@ -2,8 +2,8 @@
 
 namespace NftPortfolioTracker\Entity;
 
-use NftPortfolioTracker\Repository\AccountUserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use NftPortfolioTracker\Repository\AccountUserRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;

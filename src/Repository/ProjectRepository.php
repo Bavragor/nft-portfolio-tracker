@@ -2,9 +2,9 @@
 
 namespace NftPortfolioTracker\Repository;
 
-use NftPortfolioTracker\Entity\Project;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use NftPortfolioTracker\Entity\Project;
 
 /**
  * @method Project|null find($id, $lockMode = null, $lockVersion = null)

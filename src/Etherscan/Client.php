@@ -2,8 +2,8 @@
 
 namespace NftPortfolioTracker\Etherscan;
 
-use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\HandlerStack;
 use JsonException;
 use NftPortfolioTracker\Entity\Project;
 use NftPortfolioTracker\Enum\TransactionDirectionEnum;
@@ -189,7 +189,7 @@ class Client
         $queryParameters['startblock'] = $transactionBlockNumber;
         $queryParameters['endblock'] = $transactionBlockNumber;
 
-        $this->logger->info('Requesting...' , $queryParameters);
+        $this->logger->info('Requesting...', $queryParameters);
         $response = $this->httpClient->request(Request::METHOD_GET, $baseUrl, ['query' => $queryParameters]);
 
         try {
@@ -208,7 +208,7 @@ class Client
             // No result, try using erc20 transfers to get value, because of weth
             $queryParameters['action'] = 'tokentx';
             $queryParameters['sort'] = 'asc';
-            $this->logger->info('Requesting...' , $queryParameters);
+            $this->logger->info('Requesting...', $queryParameters);
             $response = $this->httpClient->request(Request::METHOD_GET, $baseUrl, ['query' => $queryParameters]);
             $responseData = json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR);
 

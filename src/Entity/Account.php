@@ -2,8 +2,8 @@
 
 namespace NftPortfolioTracker\Entity;
 
-use NftPortfolioTracker\Repository\AccountRepository;
 use Doctrine\ORM\Mapping as ORM;
+use NftPortfolioTracker\Repository\AccountRepository;
 use Symfony\Component\Uid\Uuid;
 
 /**

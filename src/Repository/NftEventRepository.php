@@ -2,9 +2,9 @@
 
 namespace NftPortfolioTracker\Repository;
 
-use NftPortfolioTracker\Entity\NftEvent;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use NftPortfolioTracker\Entity\NftEvent;
 use function Doctrine\ORM\QueryBuilder;
 
 /**

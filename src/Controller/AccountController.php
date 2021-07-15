@@ -46,7 +46,7 @@ class AccountController extends AbstractController
     {
         $account = new Account();
 
-         $form = $this->createFormBuilder($account)
+        $form = $this->createFormBuilder($account)
             ->add('name', TextType::class)
             ->add('address', TextType::class)
             ->add('save', SubmitType::class, ['label' => 'Create Account'])

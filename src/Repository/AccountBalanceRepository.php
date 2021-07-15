@@ -2,9 +2,9 @@
 
 namespace NftPortfolioTracker\Repository;
 
-use NftPortfolioTracker\Entity\AccountBalance;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use NftPortfolioTracker\Entity\AccountBalance;
 
 /**
  * @method AccountBalance|null find($id, $lockMode = null, $lockVersion = null)
