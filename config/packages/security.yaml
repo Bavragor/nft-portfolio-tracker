@@ -40,4 +40,3 @@ security:
          - { path: ^/project/calendar/create, roles: ROLE_ADMIN }
          - { path: ^/project/calendar, roles: PUBLIC_ACCESS }
          - { path: ^/project, roles: ROLE_ADMIN }
-         - { path: ^/account, roles: ROLE_ADMIN }

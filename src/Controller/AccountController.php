@@ -34,6 +34,8 @@ class AccountController extends AbstractController
      */
     public function index(): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
         $accounts = $this->accountRepository->findAll();
 
         return $this->render('account/index.html.twig', [
@@ -53,7 +55,7 @@ class AccountController extends AbstractController
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         if (!$this->isGranted('ROLE_ADMIN') && $this->getUser()->getAccount()->getAddress() !== $address) {
-            $this->createAccessDeniedException('Trying to access another account');
+            throw $this->createAccessDeniedException('Trying to access another account');
         }
 
         $overallBalance = $this->accountBalanceRepository->findOneBy(['account' => $address, 'projectName' => null]);
@@ -79,6 +81,8 @@ class AccountController extends AbstractController
      */
     public function create(Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
         $account = new Account();
 
         $form = $this->createFormBuilder($account)
