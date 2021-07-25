@@ -2,7 +2,7 @@
 
 namespace NftPortfolioTracker\Event\Account;
 
-final class AccountAddedEvent
+final class AccountAddedEvent implements AccountEvent
 {
     private string $address;
 

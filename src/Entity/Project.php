@@ -43,7 +43,7 @@ class Project
     private int $tokenDecimal = 0;
 
     /**
-     * @ORM\Column(type="string", length=42)
+     * @ORM\Column(type="string", length=42, unique=true)
      */
     private string $contract;
 

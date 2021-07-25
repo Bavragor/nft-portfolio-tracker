@@ -20,3 +20,6 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Entity'
                 prefix: 'NftPortfolioTracker\Entity'
                 alias: NftPortfolioTracker
+        dql:
+            string_functions:
+                ANY_VALUE: DoctrineExtensions\Query\Mysql\AnyValue

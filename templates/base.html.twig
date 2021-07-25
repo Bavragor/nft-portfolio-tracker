@@ -60,6 +60,35 @@
                                     <a class="nav-link" href="{{url('app_register')}}">Register</a>
                                 </li>
                             {% endif %}
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{url('project')}}">Projects</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{url('project_create')}}">Project create</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{url('account')}}">Accounts</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{url('account_create')}}">Account create</a>
+                                </li>
+                            {% endif %}
+                            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{url('account_single', {address: app.user.account.address})}}">Account Balance</a>
+                                </li>
+                            {% endif %}
+                            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{url('account_inventory', {address: app.user.account.address})}}">Account Inventory</a>
+                                </li>
+                            {% endif %}
+                            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{url('account_transactions', {address: app.user.account.address})}}">Transactions</a>
+                                </li>
+                            {% endif %}
                         </ul>
                     </div>
                 </nav>

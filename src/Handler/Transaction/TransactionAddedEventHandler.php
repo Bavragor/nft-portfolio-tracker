@@ -3,6 +3,7 @@
 namespace NftPortfolioTracker\Handler\Transaction;
 
 use NftPortfolioTracker\Entity\AccountTransaction;
+use NftPortfolioTracker\Enum\TransactionDirectionEnum;
 use NftPortfolioTracker\Event\Transaction\TransactionAddedEvent;
 use NftPortfolioTracker\Event\Transaction\TransactionInEvent;
 use NftPortfolioTracker\Event\Transaction\TransactionOutEvent;
@@ -32,12 +33,10 @@ class TransactionAddedEventHandler implements EventSubscriberInterface
             throw new \RuntimeException('Invalid event of class: ' . get_class($event));
         }
 
-        if ($event instanceof TransactionInEvent) {
-            $transactionPrice = -1 * abs($event->getPriceInWei());
-        }
+        $existingTransactions = $this->transactionRepository->findBy(['transactionHash' => $event->getTransactionHash()]);
 
-        if ($event instanceof TransactionOutEvent) {
-            $transactionPrice = $event->getPriceInWei();
+        if (count($existingTransactions) !== 0) {
+            return;
         }
 
         $transaction = new AccountTransaction();
@@ -48,9 +47,17 @@ class TransactionAddedEventHandler implements EventSubscriberInterface
         $transaction->setToAddress($event->getTo());
         $transaction->setTimestamp($event->getTimestamp());
         $transaction->setBlockNumber($event->getBlockNumber());
-        $transaction->setPriceInWei($transactionPrice);
+        $transaction->setPriceInWei($event->getPriceInWei());
         $transaction->setGasPriceInWei($event->getGasPriceInWei());
         $transaction->setGasUsed($event->getGasUsed());
+
+        if ($event instanceof TransactionInEvent) {
+            $transaction->setDirection(TransactionDirectionEnum::IN);
+        }
+
+        if ($event instanceof TransactionOutEvent) {
+            $transaction->setDirection(TransactionDirectionEnum::OUT);
+        }
 
         $this->transactionRepository->save($transaction);
     }

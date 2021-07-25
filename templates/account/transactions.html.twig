@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Transactions{% endblock %}
+
+{% block body %}
+    <div class="table-responsive">
+        <table class="table">
+            <tr>
+                {# sorting of properties based on query components #}
+                <th{% if transactions.isSorted('transaction.tokenSymbol') %} class="sorted"{% endif %}>
+                    {{ knp_pagination_sortable(transactions, 'Token Symbol', 'transaction.tokenSymbol') }}
+                    {{ knp_pagination_filter(transactions, {
+                        'transaction.tokenSymbol': 'Token Symbol',
+                    }) }}
+                </th>
+                <th>Id</th>
+                <th{% if transactions.isSorted('transaction.price') %} class="sorted"{% endif %}>
+                    {{ knp_pagination_sortable(transactions, 'Price', 'transaction.price') }}
+                </th>
+                <th{% if transactions.isSorted('transaction.gasPrice') %} class="sorted"{% endif %}>
+                    {{ knp_pagination_sortable(transactions, 'Gas price', 'transaction.gasPrice') }}
+                </th>
+                <th{% if transactions.isSorted('transaction.direction') %} class="sorted"{% endif %}>
+                    {{ knp_pagination_sortable(transactions, 'Direction', 'transaction.direction') }}
+                </th>
+                <th>Link</th>
+            </tr>
+            {% for transaction in transactions %}
+                <tr{% if transaction.direction == 1 %} class="table-success"{% else %} class="table-danger"{% endif %}>
+                    <td>{{ transaction.tokenSymbol }}</td>
+                    <td>{{ transaction.tokenId }}</td>
+                    <td>{{ transaction.price }}</td>
+                    <td>{{ transaction.gasPrice }}</td>
+                    <td>{% if transaction.direction == 1 %}<i class="bi bi-currency-dollar text-success"></i>{% else %}<i class="bi bi-currency-dollar text-danger"></i>{% endif %}</td>
+                    <td><a href="https://etherscan.io/tx/{{ transaction.transactionHash }}" target="_blank"><img width="15" src="https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/31987/eth-diamond-black.png" alt="ethereum"/></a></td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {# display navigation #}
+    <div class="navigation">
+        {{ knp_pagination_render(transactions) }}
+    </div>
+{% endblock %}

@@ -2,6 +2,7 @@
 
 namespace NftPortfolioTracker\Etherscan;
 
+use Brick\Math\BigInteger;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\HandlerStack;
 use JsonException;
@@ -75,6 +76,12 @@ class Client
 
                 foreach ($responseData['result'] as $transaction) {
                     $transaction['apiUrl'] = $baseUrl;
+
+                    if ($project->getEtherscanUrl() !== 'https://api.etherscan.io/api') { // polygon is matic as gas so we set it to zero
+                        $transaction['gasPrice'] = 0;
+                        $transaction['gasUsed'] = 0;
+                    }
+
                     yield $transaction;
                 }
             } catch (EtherscanApiRequestFailed $etherscanApiRequestFailed) {
@@ -138,10 +145,18 @@ class Client
                 }
 
                 $transaction['tokenSymbol'] = 'OS';
-                $transaction['tokenID'] = '0';
+                $tokenIds = $this->getTokenIdForOpenSeaTransaction($baseUrl, $transaction['blockNumber'], $transaction, $address);
+
+                if ($tokenIds === []) {
+                    continue;
+                }
 
                 $transaction['apiUrl'] = $baseUrl;
-                yield $transaction;
+
+                foreach ($tokenIds as $tokenId) {
+                    $transaction['tokenID'] = $tokenId;
+                    yield $transaction;
+                }
             }
         } catch (EtherscanApiRequestFailed $etherscanApiRequestFailed) {
             $this->logger->warning('Empty request ' . $etherscanApiRequestFailed->getMessage());
@@ -230,5 +245,41 @@ class Client
         }
 
         throw new EtherscanApiRequestFailed('No value found for transaction: ' . $transactionHash);
+    }
+
+    private function getTokenIdForOpenSeaTransaction(string $baseUrl, int $startBlockNumber, array $transaction, string $address): array
+    {
+        $queryParameters = [
+            'module' => 'logs',
+            'action' => 'getLogs',
+            'apikey' => $this->apiToken,
+            'address' => '0x495f947276749ce646f68ac8c248420045cb7b5e',
+            'fromBlock' => $startBlockNumber,
+            'topic0' => '0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62',
+            'topic3' => '0x000000000000000000000000' . ltrim($address, '0x'),
+            'topic0_3_opr' => 'and'
+        ];
+
+        $queryParameters['startblock'] = $startBlockNumber;
+        $queryParameters['endblock'] = 'latest';
+
+        $this->logger->info('Requesting...', $queryParameters);
+        $this->logger->info('Transaction', $transaction);
+        $response = $this->httpClient->request(Request::METHOD_GET, $baseUrl, ['query' => $queryParameters]);
+
+        $responseData = json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->logger->info('Log response for opensea', $responseData);
+
+        $this->validateApiResponse($responseData);
+
+        $tokenIds = [];
+
+        foreach ($responseData['result'] as $result) {
+            if ($result['transactionHash'] === $transaction['hash']) {
+                $tokenIds[] = BigInteger::fromBase(ltrim(substr($result['data'], 0, 66), '0x'), 16)->toBase(10);
+            }
+        }
+
+        return $tokenIds;
     }
 }

@@ -29,6 +29,11 @@ class AccountBalance
     private int $balanceInWei;
 
     /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $projectName;
+
+    /**
      * @ORM\Column(type="string", length=20, nullable=true)
      */
     private ?string $tokenSymbol;
@@ -48,13 +53,14 @@ class AccountBalance
      */
     private string $account;
 
-    public function __construct(string $account, float $balance, int $balanceInWei, float $usedGas, int $usedGasInWei, ?string $tokenSymbol)
+    public function __construct(string $account, float $balance, int $balanceInWei, float $usedGas, int $usedGasInWei, ?string $projectName, ?string $tokenSymbol)
     {
         $this->id = Uuid::v4();
 
         $this->balance = $balance;
         $this->balanceInWei = $balanceInWei;
         $this->tokenSymbol = $tokenSymbol;
+        $this->projectName = $projectName;
         $this->usedGasInWei = $usedGasInWei;
         $this->usedGas = $usedGas;
         $this->account = $account;
@@ -94,5 +100,16 @@ class AccountBalance
     public function getAccount(): ?string
     {
         return $this->account;
+    }
+
+    public function getProjectName(): ?string
+    {
+        return $this->projectName;
+    }
+
+    public function setProjectName(?string $projectName): AccountBalance
+    {
+        $this->projectName = $projectName;
+        return $this;
     }
 }

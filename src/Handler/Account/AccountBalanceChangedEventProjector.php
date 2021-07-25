@@ -3,6 +3,7 @@
 namespace NftPortfolioTracker\Handler\Account;
 
 use NftPortfolioTracker\Entity\AccountBalance;
+use NftPortfolioTracker\Enum\TransactionDirectionEnum;
 use NftPortfolioTracker\Etherscan\Ethereum;
 use NftPortfolioTracker\Event\Account\AccountBalanceChangedEvent;
 use NftPortfolioTracker\Repository\AccountBalanceRepository;
@@ -50,8 +51,15 @@ class AccountBalanceChangedEventProjector implements EventSubscriberInterface
             $usedGasForProject = 0;
 
             foreach ($transactions as $transaction) {
-                $usedGasForProject += ($transaction->getGasPriceInWei() * $transaction->getGasUsed()) / Ethereum::WEI;
-                $balanceForProject += ($transaction->getPriceInWei() / Ethereum::WEI) - $usedGasForProject;
+                $gasPrice = ($transaction['gasPriceInWei'] * $transaction['gasUsed']) / Ethereum::WEI;
+                $transactionPrice = ($transaction['priceInWei'] / Ethereum::WEI) - $gasPrice;
+
+                if ((int) $transaction['direction'] === TransactionDirectionEnum::IN) {
+                    $transactionPrice = -1 * abs($transactionPrice);
+                }
+
+                $usedGasForProject += $gasPrice;
+                $balanceForProject += $transactionPrice;
             }
 
             $balance += $balanceForProject;
@@ -63,7 +71,8 @@ class AccountBalanceChangedEventProjector implements EventSubscriberInterface
                 0,
                 $usedGasForProject,
                 0,
-                $project['tokenSymbol']
+                $project['name'],
+                $project['tokenSymbol'],
             ));
         }
 
@@ -73,7 +82,8 @@ class AccountBalanceChangedEventProjector implements EventSubscriberInterface
             0,
             $usedGas,
             0,
-            null
+            null,
+            null,
         ));
     }
 }

@@ -44,7 +44,9 @@ class ProjectRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('project')
             ->select('project.tokenSymbol')
+            ->addSelect('project.name')
             ->groupBy('project.tokenSymbol')
+            ->addGroupBy('project.name')
             ->getQuery()
             ->getScalarResult();
     }

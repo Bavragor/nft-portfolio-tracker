@@ -8,7 +8,7 @@ abstract class TransactionAddedEvent
     private string $to;
     private string $transactionHash;
     private int $blockNumber;
-    private int $tokenId;
+    private string $tokenId;
     private string $tokenSymbol;
     private int $priceInWei;
     private int $gasPriceInWei;
@@ -20,7 +20,7 @@ abstract class TransactionAddedEvent
         string $to,
         string $transactionHash,
         int $blockNumber,
-        int $tokenId,
+        string $tokenId,
         string $tokenSymbol,
         int $priceInWei,
         int $gasPriceInWei,
@@ -47,7 +47,7 @@ abstract class TransactionAddedEvent
         string $to,
         string $transactionHash,
         int $blockNumber,
-        int $tokenId,
+        string $tokenId,
         string $tokenSymbol,
         int $priceInWei,
         int $gasPriceInWei,
@@ -88,7 +88,7 @@ abstract class TransactionAddedEvent
         return $this->blockNumber;
     }
 
-    public function getTokenId(): int
+    public function getTokenId(): string
     {
         return $this->tokenId;
     }

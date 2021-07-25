@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Account{% endblock %}
+
+{% block body %}
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">Project</th>
+            <th scope="col">Symbol</th>
+            <th scope="col">Balance</th>
+            <th scope="col">Overall used gas</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for balance in balances %}
+            <tr>
+                <td>{{ balance.projectName }}</td>
+                <td>{{ balance.tokenSymbol }}</td>
+                <td>{{ balance.balance|number_format(4) }}</td>
+                <td>{{ balance.usedGas|number_format(4) }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

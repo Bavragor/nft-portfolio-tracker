@@ -68,7 +68,7 @@ class ProjectController extends AbstractController
             $entityManager->persist($projectData);
             $entityManager->flush();
 
-            $this->eventDispatcher->dispatch(ContractAddedEvent::create($project->getContract()));
+            //$this->eventDispatcher->dispatch(ContractAddedEvent::create($project->getContract()));
 
             return $this->redirectToRoute('project_create');
         }

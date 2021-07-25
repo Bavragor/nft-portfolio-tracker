@@ -86,16 +86,9 @@ class AccountAsset
             ->setFromAddress($transaction->getFromAddress())
             ->setToAddress($transaction->getToAddress())
             ->setPrice($transaction->getPriceInWei() / Ethereum::WEI)
+            ->setDirection($transaction->getDirection())
             ->setGasPrice(($transaction->getGasPriceInWei() * $transaction->getGasUsed()) / Ethereum::WEI)
         ;
-
-        if ($account === $accountAsset->getToAddress()) {
-            $accountAsset->setDirection(TransactionDirectionEnum::IN);
-        }
-
-        if ($account === $accountAsset->getFromAddress()) {
-            $accountAsset->setDirection(TransactionDirectionEnum::OUT);
-        }
 
         return $accountAsset;
     }

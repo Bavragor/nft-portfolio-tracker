@@ -2,12 +2,15 @@
 
 namespace NftPortfolioTracker\Controller;
 
+use Knp\Component\Pager\PaginatorInterface;
 use NftPortfolioTracker\Entity\Account;
+use NftPortfolioTracker\Enum\TransactionDirectionEnum;
 use NftPortfolioTracker\Repository\AccountAssetRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use function Doctrine\ORM\QueryBuilder;
 
 class AccountAssetsController extends AbstractController
 {
@@ -19,15 +22,93 @@ class AccountAssetsController extends AbstractController
     }
 
     /**
-     * @Route("/account/{address}/assets", name="account_assets")
+     * @Route("/account/{address}/transactions", name="account_transactions")
      */
-    public function index(string $address): Response
+    public function transactions(Request $request, PaginatorInterface $paginator): Response
     {
-        $transactions = $this->accountAssetRepository->findBy(['account' => $address], ['timestamp' => 'desc']);
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        return $this->render('account_assets/index.html.twig', [
-            'controller_name' => 'AccountAssetsController',
-            'transactions' => $transactions
+        if (!$this->isGranted('ROLE_ADMIN') && $this->getUser()->getAccount()->getAddress() !== $request->get('address')) {
+            $this->createAccessDeniedException('Trying to access another account');
+        }
+
+        //$transactions = $this->accountAssetRepository->findBy(['account' => $address], ['timestamp' => 'desc']);
+
+        $queryBuilder = $this->accountAssetRepository
+            ->createQueryBuilder('transaction');
+
+        $assetsQuery = $queryBuilder
+            ->select('transaction')
+            ->where(
+                $queryBuilder->expr()->eq('transaction.account', $queryBuilder->expr()->literal($request->get('address')))
+            )
+            ->orderBy('transaction.timestamp', 'desc')
+        ;
+
+        $pagination = $paginator->paginate(
+            $assetsQuery, /* query NOT result */
+            $request->query->getInt('page', 1), /*page number*/
+            $request->query->getInt('limit', 100) /*limit per page*/
+        );
+
+        return $this->render('account/transactions.html.twig', [
+            'transactions' => $pagination
+        ]);
+    }
+
+    /**
+     * @Route("/account/{address}/inventory", name="account_inventory")
+     */
+    public function inventory(Request $request, PaginatorInterface $paginator): Response
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        if (!$this->isGranted('ROLE_ADMIN') && $this->getUser()->getAccount()->getAddress() !== $request->get('address')) {
+            $this->createAccessDeniedException('Trying to access another account');
+        }
+
+        //$transactions = $this->accountAssetRepository->findBy(['account' => $address], ['timestamp' => 'desc']);
+
+        $queryBuilder = $this->accountAssetRepository
+            ->createQueryBuilder('transactionIn');
+
+        $queryBuilderOutgoingQuery = $this->accountAssetRepository
+            ->createQueryBuilder('transactionOut');
+
+        $queryBuilderOutgoingQuery = $queryBuilderOutgoingQuery
+            ->resetDQLPart('select')
+            ->addSelect($queryBuilderOutgoingQuery->expr()->concat('transactionOut.tokenSymbol', 'transactionOut.tokenId'))
+            ->where(
+                $queryBuilderOutgoingQuery->expr()->andX(
+                    $queryBuilderOutgoingQuery->expr()->eq('transactionOut.account', $queryBuilderOutgoingQuery->expr()->literal($request->get('address'))),
+                    $queryBuilderOutgoingQuery->expr()->eq('transactionOut.direction', TransactionDirectionEnum::OUT)
+                )
+            )
+        ;
+
+        $assetsQuery = $queryBuilder
+            ->addSelect('transactionIn')
+            ->where(
+                $queryBuilder->expr()->andX(
+                    $queryBuilder->expr()->eq('transactionIn.account', $queryBuilder->expr()->literal($request->get('address'))),
+                    $queryBuilder->expr()->notIn(
+                        $queryBuilderOutgoingQuery->expr()->concat('transactionIn.tokenSymbol', 'transactionIn.tokenId'),
+                        $queryBuilderOutgoingQuery->getDQL()
+                    )
+                )
+            )
+            ->addOrderBy('transactionIn.timestamp', 'desc')
+            ->addOrderBy('transactionIn.tokenSymbol')
+        ;
+
+        $pagination = $paginator->paginate(
+            $assetsQuery, /* query NOT result */
+            $request->query->getInt('page', 1), /*page number*/
+            $request->query->getInt('limit', 100) /*limit per page*/
+        );
+
+        return $this->render('account/inventory.html.twig', [
+            'transactions' => $pagination
         ]);
     }
 }

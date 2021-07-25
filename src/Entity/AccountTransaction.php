@@ -53,19 +53,24 @@ class AccountTransaction
     private string $tokenSymbol;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="bigint", options={"unsigned"=true})
      */
     private int $priceInWei;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="bigint", options={"unsigned"=true})
      */
     private int $gasPriceInWei;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="bigint", options={"unsigned"=true})
      */
     private int $gasUsed;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private int $direction;
 
     public function __construct()
     {
@@ -192,6 +197,17 @@ class AccountTransaction
     public function setTokenSymbol(string $tokenSymbol): AccountTransaction
     {
         $this->tokenSymbol = $tokenSymbol;
+        return $this;
+    }
+
+    public function getDirection(): int
+    {
+        return $this->direction;
+    }
+
+    public function setDirection(int $direction): AccountTransaction
+    {
+        $this->direction = $direction;
         return $this;
     }
 }

@@ -1,30 +1,15 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello AccountController!{% endblock %}
+{% block title %}Accounts{% endblock %}
 
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
-
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
-
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code><a href="{{ '/home/kevin/Projects/nft-portfolio-tracker/src/Controller/AccountController.php'|file_link(0) }}">src/Controller/AccountController.php</a></code></li>
-        <li>Your template at <code><a href="{{ '/home/kevin/Projects/nft-portfolio-tracker/templates/account/index.html.twig'|file_link(0) }}">templates/account/index.html.twig</a></code></li>
-    </ul>
-
     <ul>
         {% for account in accounts %}
             <li>
-                <a href="{{ url('account_assets', {address: account.address}) }}">{{ account.name }}</a>
+                <a href="{{ url('account_transactions', {address: account.address}) }}">{{ account.name }}</a>
                 <a href="{{ path('account_delete', {'address': account.address}) }}"><i class="bi bi-file-earmark-x text-danger"></i></a>
                 <a href="{{ path('account_refresh', {'address': account.address}) }}"><i class="bi bi-arrow-repeat"></i></a>
             </li>
         {% endfor %}
     </ul>
-</div>
 {% endblock %}

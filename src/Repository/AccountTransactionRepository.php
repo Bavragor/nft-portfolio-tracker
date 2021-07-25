@@ -64,7 +64,10 @@ class AccountTransactionRepository extends ServiceEntityRepository
     {
         $queryBuilder = $this->createQueryBuilder('transaction');
         $queryBuilder = $queryBuilder
-            ->select('transaction')
+            ->select('any_value(transaction.priceInWei) as priceInWei')
+            ->addSelect('any_value(transaction.gasPriceInWei) as gasPriceInWei')
+            ->addSelect('any_value(transaction.gasUsed) as gasUsed')
+            ->addSelect('any_value(transaction.direction) as direction')
             ->where(
                 $queryBuilder->expr()->andX(
                     $queryBuilder->expr()->eq('transaction.tokenSymbol', $queryBuilder->expr()->literal($tokenSymbol)),
@@ -74,7 +77,7 @@ class AccountTransactionRepository extends ServiceEntityRepository
                     )
                 )
             )
-            ->groupBy('transaction.transactionHash')
+            ->addGroupBy('transaction.transactionHash')
         ;
 
         return $queryBuilder->getQuery()->getResult();
