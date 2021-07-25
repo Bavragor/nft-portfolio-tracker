@@ -552,14 +552,6 @@ final class Version20210718210206 extends AbstractMigration implements Container
         $project->setEtherscanUrl('https://api.etherscan.io/api');
         $project->setDescription(null);
         $em->persist($project);
-        $project = new Project();
-        $project->setName('Pixel Glyphs');
-        $project->setTokenSymbol('PxG');
-        $project->setTokenName('PixelGlyphs');
-        $project->setContract('0xf38d6bf300d52ba7880b43cddb3f94ee3c6c4ea6');
-        $project->setEtherscanUrl('https://api.etherscan.io/api');
-        $project->setDescription(null);
-        $em->persist($project);
         $em->flush();
     }
 
