@@ -33,6 +33,11 @@ class AccountTransaction
     private string $toAddress;
 
     /**
+     * @ORM\Column(type="string", length=42)
+     */
+    private string $contract;
+
+    /**
      * @ORM\Column(type="string", length=66)
      */
     private string $transactionHash;
@@ -208,6 +213,17 @@ class AccountTransaction
     public function setDirection(int $direction): AccountTransaction
     {
         $this->direction = $direction;
+        return $this;
+    }
+
+    public function getContract(): string
+    {
+        return $this->contract;
+    }
+
+    public function setContract(string $contract): AccountTransaction
+    {
+        $this->contract = $contract;
         return $this;
     }
 }

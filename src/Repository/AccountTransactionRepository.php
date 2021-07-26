@@ -6,8 +6,10 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 use NftPortfolioTracker\Entity\AccountTransaction;
+use NftPortfolioTracker\Entity\Project;
 use function Doctrine\ORM\QueryBuilder;
 
 /**
@@ -38,15 +40,19 @@ class AccountTransactionRepository extends ServiceEntityRepository
         $this->getEntityManager()->flush();
     }
 
-    public function getLatestBlockNumberForAccount(string $account): ?int
+    public function getLatestBlockNumberForAccount(string $account, string $etherscanUrl): ?int
     {
         $queryBuilder = $this->createQueryBuilder('transaction');
         $queryBuilder = $queryBuilder
             ->select($queryBuilder->expr()->max('transaction.blockNumber'))
+            ->join(Project::class, 'project', Join::WITH, $queryBuilder->expr()->eq('project.contract', 'transaction.contract'))
             ->where(
-                $queryBuilder->expr()->orX(
-                    $queryBuilder->expr()->eq('transaction.toAddress', $queryBuilder->expr()->literal($account)),
-                    $queryBuilder->expr()->eq('transaction.fromAddress', $queryBuilder->expr()->literal($account))
+                $queryBuilder->expr()->andX(
+                    $queryBuilder->expr()->eq('project.etherscanUrl', $queryBuilder->expr()->literal($etherscanUrl)),
+                    $queryBuilder->expr()->orX(
+                        $queryBuilder->expr()->eq('transaction.toAddress', $queryBuilder->expr()->literal($account)),
+                        $queryBuilder->expr()->eq('transaction.fromAddress', $queryBuilder->expr()->literal($account))
+                    )
                 )
             );
 
@@ -100,5 +106,19 @@ class AccountTransactionRepository extends ServiceEntityRepository
         ;
 
         return $queryBuilder->getQuery()->getResult();
+    }
+
+    public function hasTransactionsForProject(Project $project)
+    {
+        $queryBuilder = $this->createQueryBuilder('transaction');
+        $queryBuilder = $queryBuilder
+            ->select('transaction.id')
+            ->where(
+                $queryBuilder->expr()->eq('transaction.contract', $queryBuilder->expr()->literal($project->getContract()))
+            )
+            ->setMaxResults(1)
+        ;
+
+        return count($queryBuilder->getQuery()->getScalarResult()) !== 0;
     }
 }

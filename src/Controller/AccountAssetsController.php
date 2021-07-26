@@ -2,8 +2,10 @@
 
 namespace NftPortfolioTracker\Controller;
 
+use Doctrine\ORM\Query\Expr\Join;
 use Knp\Component\Pager\PaginatorInterface;
 use NftPortfolioTracker\Entity\Account;
+use NftPortfolioTracker\Entity\AssetPrice;
 use NftPortfolioTracker\Enum\TransactionDirectionEnum;
 use NftPortfolioTracker\Repository\AccountAssetRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -88,6 +90,8 @@ class AccountAssetsController extends AbstractController
 
         $assetsQuery = $queryBuilder
             ->addSelect('transactionIn')
+            ->addSelect('assetPrice.price')
+            ->join(AssetPrice::class, 'assetPrice', Join::WITH, 'transactionIn.tokenSymbol = assetPrice.tokenSymbol AND transactionIn.tokenId = assetPrice.tokenId')
             ->where(
                 $queryBuilder->expr()->andX(
                     $queryBuilder->expr()->eq('transactionIn.account', $queryBuilder->expr()->literal($request->get('address'))),
@@ -101,6 +105,16 @@ class AccountAssetsController extends AbstractController
             ->addOrderBy('transactionIn.tokenSymbol')
         ;
 
+        $transactionCountQueryBuilder = $this->accountAssetRepository->createQueryBuilder('transactionCount', 'transactionCount.transactionHash');
+        $transactionCountQueryBuilder
+            ->select('COUNT(transactionCount.id) as count')
+            ->addSelect('transactionCount.transactionHash')
+            ->where(
+                $transactionCountQueryBuilder->expr()->eq('transactionCount.account', $transactionCountQueryBuilder->expr()->literal($request->get('address')))
+            )
+            ->groupBy('transactionCount.transactionHash')
+        ;
+
         $pagination = $paginator->paginate(
             $assetsQuery, /* query NOT result */
             $request->query->getInt('page', 1), /*page number*/
@@ -108,7 +122,8 @@ class AccountAssetsController extends AbstractController
         );
 
         return $this->render('account/inventory.html.twig', [
-            'transactions' => $pagination
+            'transactions' => $pagination,
+            'countByTransactionHash' => $transactionCountQueryBuilder->getQuery()->getArrayResult(),
         ]);
     }
 }

@@ -9,6 +9,7 @@
             <th scope="col">Project</th>
             <th scope="col">Symbol</th>
             <th scope="col">Balance</th>
+            <th scope="col">Estimated Balance</th>
             <th scope="col">Overall used gas</th>
         </tr>
         </thead>
@@ -18,6 +19,11 @@
                 <td>{{ balance.projectName }}</td>
                 <td>{{ balance.tokenSymbol }}</td>
                 <td>{{ balance.balance|number_format(4) }}</td>
+                {% if inventoryPrices[balance.tokenSymbol] is defined %}
+                <td>{{ balance.balance|number_format(4) + inventoryPrices[balance.tokenSymbol].inventoryBalance }}</td>
+                    {% else %}
+                    <td></td>
+                {% endif %}
                 <td>{{ balance.usedGas|number_format(4) }}</td>
             </tr>
         {% endfor %}

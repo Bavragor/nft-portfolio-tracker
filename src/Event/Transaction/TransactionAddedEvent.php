@@ -14,6 +14,7 @@ abstract class TransactionAddedEvent
     private int $gasPriceInWei;
     private int $gasUsed;
     private int $timestamp;
+    private string $contract;
 
     protected function __construct(
         string $from,
@@ -25,7 +26,8 @@ abstract class TransactionAddedEvent
         int $priceInWei,
         int $gasPriceInWei,
         int $gasUsed,
-        int $timestamp
+        int $timestamp,
+        string $contract
     ) {
         $this->from = $from;
         $this->to = $to;
@@ -37,6 +39,7 @@ abstract class TransactionAddedEvent
         $this->gasPriceInWei = $gasPriceInWei;
         $this->gasUsed = $gasUsed;
         $this->timestamp = $timestamp;
+        $this->contract = $contract;
     }
 
     /**
@@ -52,7 +55,8 @@ abstract class TransactionAddedEvent
         int $priceInWei,
         int $gasPriceInWei,
         int $gasUsed,
-        int $timestamp
+        int $timestamp,
+        string $contract
     ): self {
         return new static(
             $from,
@@ -65,6 +69,7 @@ abstract class TransactionAddedEvent
             $gasPriceInWei,
             $gasUsed,
             $timestamp,
+            $contract
         );
     }
 
@@ -116,5 +121,10 @@ abstract class TransactionAddedEvent
     public function getTimestamp(): int
     {
         return $this->timestamp;
+    }
+
+    public function getContract(): string
+    {
+        return $this->contract;
     }
 }

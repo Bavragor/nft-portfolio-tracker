@@ -20,20 +20,18 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class AccountUpdatedEventHandler extends AbstractAccountEventHandler implements EventSubscriberInterface
 {
     private ProjectRepository $projectRepository;
-    private AccountTransactionRepository $transactionRepository;
 
     public function __construct(
         LoggerInterface $logger,
         Client $etherscanClient,
         EventDispatcherInterface $eventDispatcher,
         EventDispatcherInterface $asyncEventDispatcher,
-        ProjectRepository $projectRepository,
-        AccountTransactionRepository $transactionRepository
+        AccountTransactionRepository $accountTransactionRepository,
+        ProjectRepository $projectRepository
     ) {
-        parent::__construct($logger, $etherscanClient, $eventDispatcher, $asyncEventDispatcher);
+        parent::__construct($logger, $etherscanClient, $eventDispatcher, $asyncEventDispatcher, $accountTransactionRepository);
 
         $this->projectRepository = $projectRepository;
-        $this->transactionRepository = $transactionRepository;
     }
 
     public static function getSubscribedEvents(): array
@@ -45,15 +43,12 @@ class AccountUpdatedEventHandler extends AbstractAccountEventHandler implements 
 
     public function handle(AccountUpdatedEvent $event): void
     {
-        $latestBlockNumber = null;
-
         $contracts = $this->projectRepository->findBy(['contract' => $event->getContracts()]);
 
         if (count($event->getContracts()) !== 1) { // when event was not triggered by new project/contract
             $contracts = $this->projectRepository->findAll();
-            $latestBlockNumber = $this->transactionRepository->getLatestBlockNumberForAccount($event->getAddress());
         }
 
-        $this->handleAccountEvent($event, $contracts, $latestBlockNumber);
+        $this->handleAccountEvent($event, $contracts);
     }
 }

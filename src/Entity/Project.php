@@ -52,6 +52,11 @@ class Project
      */
     private $etherscanUrl;
 
+    /**
+     * @ORM\Column(type="float", options={"default" : 0.0})
+     */
+    private float $floorPrice;
+
     public function __construct()
     {
         $this->id = Uuid::v4();
@@ -143,6 +148,17 @@ class Project
     {
         $this->etherscanUrl = $etherscanUrl;
 
+        return $this;
+    }
+
+    public function getFloorPrice(): float
+    {
+        return $this->floorPrice;
+    }
+
+    public function setFloorPrice(float $floorPrice): Project
+    {
+        $this->floorPrice = $floorPrice;
         return $this;
     }
 }

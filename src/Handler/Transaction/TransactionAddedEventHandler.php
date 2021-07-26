@@ -33,12 +33,6 @@ class TransactionAddedEventHandler implements EventSubscriberInterface
             throw new \RuntimeException('Invalid event of class: ' . get_class($event));
         }
 
-        $existingTransactions = $this->transactionRepository->findBy(['transactionHash' => $event->getTransactionHash()]);
-
-        if (count($existingTransactions) !== 0) {
-            return;
-        }
-
         $transaction = new AccountTransaction();
         $transaction->setTransactionHash($event->getTransactionHash());
         $transaction->setTokenId($event->getTokenId());
@@ -50,6 +44,7 @@ class TransactionAddedEventHandler implements EventSubscriberInterface
         $transaction->setPriceInWei($event->getPriceInWei());
         $transaction->setGasPriceInWei($event->getGasPriceInWei());
         $transaction->setGasUsed($event->getGasUsed());
+        $transaction->setContract($event->getContract());
 
         if ($event instanceof TransactionInEvent) {
             $transaction->setDirection(TransactionDirectionEnum::IN);

@@ -2,12 +2,17 @@
 
 namespace NftPortfolioTracker\Controller;
 
+use Doctrine\ORM\Query\Expr\Join;
 use NftPortfolioTracker\Entity\Account;
+use NftPortfolioTracker\Entity\AssetPrice;
+use NftPortfolioTracker\Enum\TransactionDirectionEnum;
 use NftPortfolioTracker\Event\Account\AccountAddedEvent;
 use NftPortfolioTracker\Event\Account\AccountDeletedEvent;
 use NftPortfolioTracker\Event\Account\AccountUpdatedEvent;
+use NftPortfolioTracker\Repository\AccountAssetRepository;
 use NftPortfolioTracker\Repository\AccountBalanceRepository;
 use NftPortfolioTracker\Repository\AccountRepository;
+use NftPortfolioTracker\Repository\AssetPriceRepository;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -15,18 +20,28 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use function Doctrine\ORM\QueryBuilder;
 
 class AccountController extends AbstractController
 {
     private EventDispatcherInterface $eventDispatcher;
     private AccountRepository $accountRepository;
     private AccountBalanceRepository $accountBalanceRepository;
+    private AssetPriceRepository $assetPriceRepository;
+    private AccountAssetRepository $accountAssetRepository;
 
-    public function __construct(EventDispatcherInterface $eventDispatcher, AccountRepository $accountRepository, AccountBalanceRepository $accountBalanceRepository)
-    {
+    public function __construct(
+        EventDispatcherInterface $eventDispatcher,
+        AccountRepository $accountRepository,
+        AccountBalanceRepository $accountBalanceRepository,
+        AssetPriceRepository $assetPriceRepository,
+        AccountAssetRepository $accountAssetRepository
+    ) {
         $this->eventDispatcher = $eventDispatcher;
         $this->accountRepository = $accountRepository;
         $this->accountBalanceRepository = $accountBalanceRepository;
+        $this->assetPriceRepository = $assetPriceRepository;
+        $this->accountAssetRepository = $accountAssetRepository;
     }
 
     /**
@@ -60,6 +75,57 @@ class AccountController extends AbstractController
 
         $overallBalance = $this->accountBalanceRepository->findOneBy(['account' => $address, 'projectName' => null]);
 
+        $queryBuilder = $this->accountAssetRepository
+            ->createQueryBuilder('transactionIn');
+
+        $queryBuilderOutgoingQuery = $this->accountAssetRepository
+            ->createQueryBuilder('transactionOut');
+
+        $queryBuilderOutgoingQuery = $queryBuilderOutgoingQuery
+            ->resetDQLPart('select')
+            ->addSelect($queryBuilderOutgoingQuery->expr()->concat('transactionOut.tokenSymbol', 'transactionOut.tokenId'))
+            ->where(
+                $queryBuilderOutgoingQuery->expr()->andX(
+                    $queryBuilderOutgoingQuery->expr()->eq('transactionOut.account', $queryBuilderOutgoingQuery->expr()->literal($request->get('address'))),
+                    $queryBuilderOutgoingQuery->expr()->eq('transactionOut.direction', TransactionDirectionEnum::OUT)
+                )
+            )
+        ;
+
+        $assetsQuery = $queryBuilder
+            ->select($queryBuilderOutgoingQuery->expr()->concat('transactionIn.tokenSymbol', 'transactionIn.tokenId'))
+            ->where(
+                $queryBuilder->expr()->andX(
+                    $queryBuilder->expr()->eq('transactionIn.account', $queryBuilder->expr()->literal($request->get('address'))),
+                    $queryBuilder->expr()->notIn(
+                        $queryBuilderOutgoingQuery->expr()->concat('transactionIn.tokenSymbol', 'transactionIn.tokenId'),
+                        $queryBuilderOutgoingQuery->getDQL()
+                    )
+                )
+            )
+            ->addOrderBy('transactionIn.timestamp', 'desc')
+            ->addOrderBy('transactionIn.tokenSymbol')
+        ;
+
+        $floorPriceQueryBuilder = $this->assetPriceRepository->createQueryBuilder('floorPrice', 'floorPrice.tokenSymbol');
+        $floorPriceQueryBuilder
+            ->select('SUM(floorPrice.price) as inventoryBalance')
+            ->addSelect('floorPrice.tokenSymbol')
+            ->where(
+                $floorPriceQueryBuilder->expr()->andX(
+                    $floorPriceQueryBuilder->expr()->in(
+                        $queryBuilderOutgoingQuery->expr()->concat('floorPrice.tokenSymbol', 'floorPrice.tokenId'),
+                        $assetsQuery->getDQL()
+                    ),
+                    $floorPriceQueryBuilder->expr()->orX(
+                        $floorPriceQueryBuilder->expr()->isNull('floorPrice.createdByAddress'),
+                        $floorPriceQueryBuilder->expr()->eq('floorPrice.createdByAddress', $floorPriceQueryBuilder->expr()->literal($address))
+                    )
+                )
+            )
+            ->groupBy('floorPrice.tokenSymbol')
+        ;
+
         $balances = $this->accountBalanceRepository
             ->createQueryBuilder('balance')
             ->select('balance')
@@ -69,10 +135,23 @@ class AccountController extends AbstractController
             ->orderBy('balance.balance', 'asc')
             ->getQuery()->getResult();
 
-        array_unshift($balances, $overallBalance);
+        if ($overallBalance !== null) {
+            array_unshift($balances, $overallBalance);
+        }
+
+        $overallInventoryPrice = 0.0;
+
+        $inventoryPrices = $floorPriceQueryBuilder->getQuery()->getResult();
+
+        foreach ($inventoryPrices as $inventoryPrice) {
+            $overallInventoryPrice += $inventoryPrice['inventoryBalance'];
+        }
+
+        $inventoryPrices[""] = ['inventoryBalance' => $overallInventoryPrice];
 
         return $this->render('account/single.html.twig', [
             'balances' => $balances,
+            'inventoryPrices' => $inventoryPrices,
         ]);
     }
 

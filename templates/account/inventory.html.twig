@@ -18,12 +18,15 @@
     }
 </style>
 <div class="row row-cols-1 row-cols-md-3 row-cols-lg-6 row-cols-xl-8 g-4">
-{% for transaction in transactions %}
+{% for transactionData in transactions %}
+    {% set transaction = transactionData[0] %}
+    {% set floorPrice = transactionData.price %}
     <div class="col">
     <div class="card h-100">
         <div class="card-body">
             <h5 class="card-title">{{ transaction.tokenSymbol }}</h5>
-            <p>Price: <b>{{ transaction.price }}</b> <img class="eth-icon" src="https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/31987/eth-diamond-black.png" alt="ethereum"/></p>
+            <p>Initial Price: <b>{{ transaction.price / countByTransactionHash[transaction.transactionHash].count }}</b> <img class="eth-icon" src="https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/31987/eth-diamond-black.png" alt="ethereum"/></p>
+            <p>Floor Price: <b>{{ floorPrice }}</b> <img class="eth-icon" src="https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/31987/eth-diamond-black.png" alt="ethereum"/></p>
             <p>Gas: <b>{{ transaction.gasPrice }}</b> <img class="eth-icon" src="https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/31987/eth-diamond-black.png" alt="ethereum"/></p>
             <!--<p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>-->
         </div>

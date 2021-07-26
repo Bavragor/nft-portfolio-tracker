@@ -16,12 +16,14 @@ class AccountAssetsChangedEventProjector implements EventSubscriberInterface
     private AccountTransactionRepository $transactionRepository;
     private AccountAssetRepository $accountAssetRepository;
     private AssetPriceRepository $assetPriceRepository;
+    private ProjectRepository $projectRepository;
 
-    public function __construct(AccountTransactionRepository $transactionRepository, AccountAssetRepository $accountAssetRepository, AssetPriceRepository $assetPriceRepository)
+    public function __construct(AccountTransactionRepository $transactionRepository, AccountAssetRepository $accountAssetRepository, AssetPriceRepository $assetPriceRepository, ProjectRepository $projectRepository)
     {
         $this->transactionRepository = $transactionRepository;
         $this->accountAssetRepository = $accountAssetRepository;
         $this->assetPriceRepository = $assetPriceRepository;
+        $this->projectRepository = $projectRepository;
     }
 
     public static function getSubscribedEvents(): array
@@ -38,11 +40,24 @@ class AccountAssetsChangedEventProjector implements EventSubscriberInterface
 
         $transactions = $this->transactionRepository->getTransactionsByAccount($event->getAddress());
 
+        $projects = [];
+
         foreach ($transactions as $transaction) {
+            if (!array_key_exists($transaction->getContract(), $projects)) {
+                $projects[$transaction->getContract()] = $this->projectRepository->findOneBy(['contract' => $transaction->getContract()]);
+            }
+
             $accountAsset = AccountAsset::createFromTransactionWithAccountAddress($event->getAddress(), $transaction);
 
+            $assetPrice = AssetPrice::createFromAccountAsset($accountAsset);
+
+            if ($projects[$transaction->getContract()] !== null) {
+                $assetPrice->setPrice($projects[$transaction->getContract()]->getFloorPrice());
+                $assetPrice->setCreatedBy($transaction->getContract());
+            }
+
             $this->accountAssetRepository->save($accountAsset);
-            $this->assetPriceRepository->save(AssetPrice::createFromAccountAsset($accountAsset));
+            $this->assetPriceRepository->save($assetPrice);
         }
     }
 }

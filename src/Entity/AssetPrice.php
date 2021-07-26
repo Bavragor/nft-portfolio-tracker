@@ -23,7 +23,7 @@ class AssetPrice
     private ?string $createdBy;
 
     /**
-     * @ORM\Column(type="string", length=42)
+     * @ORM\Column(type="string", length=42, nullable=true)
      */
     private string $createdByAddress;
 
@@ -56,7 +56,6 @@ class AssetPrice
     {
         $assetPrice = new self();
         $assetPrice
-            ->setCreatedByAddress($accountAsset->getAccount())
             ->setInitialPrice($accountAsset->getPrice())
             ->setTokenSymbol($accountAsset->getTokenSymbol())
             ->setTokenId($accountAsset->getTokenId())

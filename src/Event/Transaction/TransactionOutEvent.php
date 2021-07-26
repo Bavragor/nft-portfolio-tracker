@@ -17,6 +17,7 @@ final class TransactionOutEvent extends TransactionAddedEvent
             $transaction['gasPrice'],
             $transaction['gasUsed'],
             $transaction['timeStamp'],
+            $transaction['contractAddress'],
         );
     }
 }

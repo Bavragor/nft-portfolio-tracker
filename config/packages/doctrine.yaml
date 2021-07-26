@@ -23,3 +23,4 @@ doctrine:
         dql:
             string_functions:
                 ANY_VALUE: DoctrineExtensions\Query\Mysql\AnyValue
+                GROUP_CONCAT: DoctrineExtensions\Query\Mysql\GroupConcat

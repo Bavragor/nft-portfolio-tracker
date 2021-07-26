@@ -19,20 +19,18 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class AccountAddedEventHandler extends AbstractAccountEventHandler implements EventSubscriberInterface
 {
     private ProjectRepository $projectRepository;
-    private AccountTransactionRepository $transactionRepository;
 
     public function __construct(
         LoggerInterface $logger,
         Client $etherscanClient,
         EventDispatcherInterface $eventDispatcher,
         EventDispatcherInterface $asyncEventDispatcher,
-        ProjectRepository $projectRepository,
-        AccountTransactionRepository $transactionRepository
+        AccountTransactionRepository $accountTransactionRepository,
+        ProjectRepository $projectRepository
     ) {
-        parent::__construct($logger, $etherscanClient, $eventDispatcher, $asyncEventDispatcher);
+        parent::__construct($logger, $etherscanClient, $eventDispatcher, $asyncEventDispatcher, $accountTransactionRepository);
 
         $this->projectRepository = $projectRepository;
-        $this->transactionRepository = $transactionRepository;
     }
 
     public static function getSubscribedEvents(): array
@@ -50,8 +48,6 @@ class AccountAddedEventHandler extends AbstractAccountEventHandler implements Ev
             return;
         }
 
-        $latestBlockNumber = $this->transactionRepository->getLatestBlockNumberForAccount($event->getAddress());
-
-        $this->handleAccountEvent($event, $projects, $latestBlockNumber);
+        $this->handleAccountEvent($event, $projects);
     }
 }
