@@ -25,6 +25,7 @@ class AssetPriceRepository extends ServiceEntityRepository
         $tableName = $this->getEntityManager()->getClassMetadata(AssetPrice::class)->getTableName();
 
         $connection->delete($tableName, ['created_by_address' => $address]);
+        $connection->delete($tableName, ['created_by_address' => null]);
     }
 
     public function save(AssetPrice $assetPrice): void
